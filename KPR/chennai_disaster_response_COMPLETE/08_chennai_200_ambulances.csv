@@ -1,0 +1,201 @@
+ambulance_id,zone_id,zone_name,latitude,longitude,status,patient_capacity,type
+A001,Z02,Central Chennai,13.085455,80.277526,Standby,1,Advanced
+A002,Z02,Central Chennai,13.073499,80.232033,Available,3,Basic
+A003,Z05,South-West Chennai,13.021859,80.169004,Available,2,Basic
+A004,Z03,Adyar,12.995023,80.28719,Dispatched,3,Advanced
+A005,Z05,South-West Chennai,13.041143,80.161083,Available,2,Basic
+A006,Z02,Central Chennai,13.078315,80.299157,Standby,3,Advanced
+A007,Z02,Central Chennai,13.085647,80.26132,Dispatched,4,Basic
+A008,Z03,Adyar,13.018836,80.248409,Available,2,Advanced
+A009,Z04,Velachery,13.009551,80.204855,Standby,3,Basic
+A010,Z05,South-West Chennai,13.018716,80.184505,Dispatched,2,Advanced
+A011,Z03,Adyar,13.008238,80.228908,Dispatched,2,Advanced
+A012,Z04,Velachery,12.989512,80.201794,Available,3,Advanced
+A013,Z05,South-West Chennai,13.023764,80.183455,Dispatched,3,Basic
+A014,Z05,South-West Chennai,13.028261,80.171655,Available,2,Basic
+A015,Z01,North Chennai,13.088161,80.266909,Available,3,Advanced
+A016,Z02,Central Chennai,13.090659,80.224055,Available,3,Basic
+A017,Z03,Adyar,13.070289,80.250426,Available,3,Advanced
+A018,Z03,Adyar,13.048713,80.257401,Dispatched,4,Basic
+A019,Z01,North Chennai,13.118027,80.273917,Available,3,Basic
+A020,Z01,North Chennai,13.126738,80.255964,Available,3,Basic
+A021,Z01,North Chennai,13.106438,80.300719,Available,3,Basic
+A022,Z03,Adyar,12.992322,80.253383,Available,4,Basic
+A023,Z03,Adyar,13.03996,80.277429,Available,2,Basic
+A024,Z02,Central Chennai,13.085455,80.277526,Dispatched,2,Basic
+A025,Z01,North Chennai,13.116416,80.283713,Standby,2,Basic
+A026,Z04,Velachery,12.961789,80.18862,Dispatched,2,Basic
+A027,Z05,South-West Chennai,13.008479,80.220434,Dispatched,3,Basic
+A028,Z04,Velachery,12.983121,80.219987,Dispatched,2,Basic
+A029,Z01,North Chennai,13.135503,80.277839,Available,3,Basic
+A030,Z05,South-West Chennai,13.004402,80.157349,Available,2,Advanced
+A031,Z03,Adyar,12.997584,80.259884,Available,1,Basic
+A032,Z02,Central Chennai,13.067777,80.262242,Available,1,Basic
+A033,Z05,South-West Chennai,13.005403,80.215084,Standby,4,Advanced
+A034,Z04,Velachery,12.986581,80.168845,Available,3,Basic
+A035,Z01,North Chennai,13.128522,80.238242,Dispatched,3,Basic
+A036,Z01,North Chennai,13.088161,80.266909,Available,3,Basic
+A037,Z05,South-West Chennai,13.029417,80.165258,Available,3,Basic
+A038,Z04,Velachery,12.968508,80.248474,Available,2,Basic
+A039,Z05,South-West Chennai,12.997228,80.153782,Available,2,Basic
+A040,Z02,Central Chennai,13.071926,80.296985,Available,2,Advanced
+A041,Z01,North Chennai,13.131112,80.287754,Available,4,Basic
+A042,Z02,Central Chennai,13.086615,80.274982,Available,3,Basic
+A043,Z05,South-West Chennai,13.018716,80.184505,Available,3,Basic
+A044,Z01,North Chennai,13.109862,80.290977,Available,2,Basic
+A045,Z01,North Chennai,13.131165,80.291614,Available,1,Basic
+A046,Z03,Adyar,12.995023,80.28719,Available,4,Basic
+A047,Z05,South-West Chennai,13.00631,80.197177,Available,3,Basic
+A048,Z05,South-West Chennai,13.021859,80.169004,Dispatched,1,Basic
+A049,Z05,South-West Chennai,13.019417,80.183681,Available,3,Basic
+A050,Z04,Velachery,12.989209,80.189374,Available,2,Advanced
+A051,Z02,Central Chennai,13.085455,80.277526,Available,3,Advanced
+A052,Z04,Velachery,12.985116,80.230844,Available,3,Basic
+A053,Z01,North Chennai,13.095567,80.282361,Available,3,Advanced
+A054,Z02,Central Chennai,13.089749,80.272511,Dispatched,1,Basic
+A055,Z03,Adyar,12.995996,80.26798,Dispatched,2,Advanced
+A056,Z05,South-West Chennai,13.040054,80.210563,Available,4,Advanced
+A057,Z04,Velachery,12.995083,80.207108,Available,2,Advanced
+A058,Z03,Adyar,13.044708,80.268007,Available,2,Basic
+A059,Z01,North Chennai,13.098906,80.304948,Dispatched,3,Basic
+A060,Z05,South-West Chennai,13.024277,80.179942,Dispatched,3,Basic
+A061,Z03,Adyar,13.049834,80.238921,Available,3,Basic
+A062,Z02,Central Chennai,13.083053,80.324375,Dispatched,3,Advanced
+A063,Z03,Adyar,12.98714,80.233244,Available,2,Advanced
+A064,Z04,Velachery,12.942746,80.242979,Dispatched,4,Basic
+A065,Z04,Velachery,12.968508,80.248474,Available,4,Basic
+A066,Z01,North Chennai,13.12215,80.263115,Standby,3,Basic
+A067,Z01,North Chennai,13.118318,80.261944,Available,3,Basic
+A068,Z04,Velachery,12.967982,80.251841,Standby,3,Basic
+A069,Z03,Adyar,13.032198,80.28072,Available,4,Basic
+A070,Z01,North Chennai,13.124457,80.281115,Dispatched,4,Basic
+A071,Z01,North Chennai,13.104147,80.30762,Available,3,Basic
+A072,Z01,North Chennai,13.180102,80.285881,Available,3,Advanced
+A073,Z02,Central Chennai,13.086232,80.258692,Available,2,Advanced
+A074,Z04,Velachery,12.974174,80.186631,Dispatched,2,Basic
+A075,Z01,North Chennai,13.133496,80.278629,Dispatched,1,Basic
+A076,Z04,Velachery,13.036905,80.213667,Available,2,Basic
+A077,Z02,Central Chennai,13.112534,80.253579,Dispatched,2,Basic
+A078,Z03,Adyar,12.996973,80.25914,Standby,3,Advanced
+A079,Z03,Adyar,13.040491,80.253824,Available,1,Basic
+A080,Z04,Velachery,13.004763,80.209341,Available,3,Advanced
+A081,Z02,Central Chennai,13.096495,80.25142,Available,2,Basic
+A082,Z05,South-West Chennai,13.026988,80.198763,Available,4,Basic
+A083,Z05,South-West Chennai,13.02029,80.173781,Standby,4,Basic
+A084,Z02,Central Chennai,13.075426,80.273748,Standby,1,Advanced
+A085,Z01,North Chennai,13.082097,80.293006,Standby,3,Advanced
+A086,Z04,Velachery,12.983121,80.219987,Available,4,Advanced
+A087,Z05,South-West Chennai,13.02029,80.173781,Available,3,Basic
+A088,Z02,Central Chennai,13.097268,80.248635,Available,3,Basic
+A089,Z02,Central Chennai,13.074414,80.252239,Available,3,Advanced
+A090,Z03,Adyar,13.002192,80.271253,Available,3,Basic
+A091,Z03,Adyar,12.992322,80.253383,Available,3,Basic
+A092,Z03,Adyar,13.029609,80.293629,Dispatched,4,Basic
+A093,Z03,Adyar,13.004862,80.259755,Available,1,Basic
+A094,Z02,Central Chennai,13.089749,80.272511,Available,2,Basic
+A095,Z03,Adyar,13.044708,80.268007,Available,2,Basic
+A096,Z02,Central Chennai,13.037124,80.26314,Available,2,Basic
+A097,Z02,Central Chennai,13.080639,80.258779,Available,4,Basic
+A098,Z03,Adyar,12.995996,80.26798,Available,4,Basic
+A099,Z04,Velachery,13.015375,80.193988,Dispatched,3,Basic
+A100,Z02,Central Chennai,13.05204,80.278981,Available,4,Basic
+A101,Z04,Velachery,12.977023,80.212473,Available,3,Basic
+A102,Z02,Central Chennai,13.11073,80.24561,Dispatched,3,Advanced
+A103,Z02,Central Chennai,13.083053,80.324375,Available,3,Basic
+A104,Z03,Adyar,12.986241,80.266361,Available,3,Basic
+A105,Z04,Velachery,12.9949,80.217931,Available,3,Advanced
+A106,Z03,Adyar,12.992322,80.253383,Dispatched,3,Basic
+A107,Z01,North Chennai,13.147582,80.306794,Available,3,Basic
+A108,Z04,Velachery,12.973965,80.233593,Available,3,Basic
+A109,Z01,North Chennai,13.123085,80.275434,Available,1,Basic
+A110,Z03,Adyar,13.018947,80.23773,Available,3,Advanced
+A111,Z02,Central Chennai,13.060338,80.299165,Available,3,Advanced
+A112,Z01,North Chennai,13.118318,80.261944,Available,3,Basic
+A113,Z01,North Chennai,13.095567,80.282361,Available,2,Basic
+A114,Z04,Velachery,12.999121,80.221652,Available,3,Basic
+A115,Z05,South-West Chennai,13.039929,80.205856,Standby,3,Advanced
+A116,Z01,North Chennai,13.110194,80.292954,Available,2,Basic
+A117,Z02,Central Chennai,13.073959,80.274923,Available,3,Basic
+A118,Z05,South-West Chennai,13.011927,80.172752,Available,3,Basic
+A119,Z04,Velachery,12.986854,80.241602,Dispatched,4,Advanced
+A120,Z02,Central Chennai,13.08808,80.301251,Available,3,Advanced
+A121,Z01,North Chennai,13.118537,80.263158,Available,4,Basic
+A122,Z02,Central Chennai,13.090659,80.224055,Dispatched,2,Basic
+A123,Z04,Velachery,12.959804,80.230301,Dispatched,1,Basic
+A124,Z03,Adyar,12.99883,80.233358,Dispatched,2,Basic
+A125,Z03,Adyar,13.018089,80.264404,Dispatched,2,Basic
+A126,Z03,Adyar,12.984614,80.225173,Available,2,Advanced
+A127,Z05,South-West Chennai,13.016809,80.19085,Available,2,Basic
+A128,Z01,North Chennai,13.131112,80.287754,Dispatched,4,Basic
+A129,Z04,Velachery,12.9949,80.217931,Available,3,Advanced
+A130,Z02,Central Chennai,13.067777,80.262242,Available,2,Basic
+A131,Z01,North Chennai,13.125076,80.29012,Standby,3,Basic
+A132,Z05,South-West Chennai,13.040707,80.164391,Dispatched,3,Basic
+A133,Z04,Velachery,12.972367,80.190437,Dispatched,2,Basic
+A134,Z01,North Chennai,13.139444,80.3351,Standby,3,Basic
+A135,Z05,South-West Chennai,13.02625,80.155653,Available,3,Basic
+A136,Z03,Adyar,13.003772,80.248118,Available,4,Basic
+A137,Z03,Adyar,13.000099,80.268558,Available,2,Advanced
+A138,Z04,Velachery,12.995083,80.207108,Available,3,Basic
+A139,Z03,Adyar,13.023898,80.257135,Dispatched,4,Advanced
+A140,Z01,North Chennai,13.14923,80.322925,Available,3,Basic
+A141,Z02,Central Chennai,13.065712,80.277107,Standby,3,Basic
+A142,Z03,Adyar,13.013045,80.274974,Available,3,Basic
+A143,Z05,South-West Chennai,12.985156,80.17464,Available,1,Basic
+A144,Z04,Velachery,12.96081,80.232384,Available,3,Advanced
+A145,Z05,South-West Chennai,13.020256,80.171939,Available,2,Basic
+A146,Z04,Velachery,12.993801,80.215349,Available,4,Basic
+A147,Z03,Adyar,13.044708,80.268007,Available,3,Basic
+A148,Z01,North Chennai,13.12215,80.263115,Available,3,Basic
+A149,Z02,Central Chennai,13.078857,80.294199,Available,2,Advanced
+A150,Z04,Velachery,12.954993,80.219532,Available,4,Basic
+A151,Z04,Velachery,12.965574,80.197691,Available,4,Advanced
+A152,Z05,South-West Chennai,13.008479,80.220434,Standby,1,Advanced
+A153,Z01,North Chennai,13.122683,80.301588,Available,3,Basic
+A154,Z01,North Chennai,13.129589,80.291685,Dispatched,2,Basic
+A155,Z05,South-West Chennai,13.006947,80.183574,Available,2,Advanced
+A156,Z03,Adyar,13.036599,80.243062,Dispatched,3,Basic
+A157,Z02,Central Chennai,13.062728,80.259358,Available,3,Basic
+A158,Z04,Velachery,13.036905,80.213667,Available,2,Advanced
+A159,Z04,Velachery,12.99814,80.191013,Available,3,Basic
+A160,Z03,Adyar,13.004862,80.259755,Available,4,Basic
+A161,Z01,North Chennai,13.125076,80.29012,Dispatched,3,Basic
+A162,Z02,Central Chennai,13.067777,80.262242,Available,3,Advanced
+A163,Z05,South-West Chennai,13.040054,80.210563,Available,2,Basic
+A164,Z01,North Chennai,13.109558,80.260628,Dispatched,2,Advanced
+A165,Z01,North Chennai,13.109429,80.316963,Dispatched,1,Basic
+A166,Z05,South-West Chennai,13.032848,80.177488,Dispatched,3,Advanced
+A167,Z04,Velachery,12.97645,80.210721,Available,4,Basic
+A168,Z03,Adyar,13.017871,80.266051,Available,4,Basic
+A169,Z03,Adyar,13.023167,80.252716,Available,3,Basic
+A170,Z03,Adyar,12.996973,80.25914,Available,3,Basic
+A171,Z05,South-West Chennai,13.027361,80.17833,Available,3,Basic
+A172,Z01,North Chennai,13.094949,80.280353,Dispatched,3,Basic
+A173,Z04,Velachery,12.986854,80.241602,Dispatched,4,Advanced
+A174,Z03,Adyar,12.995266,80.257084,Available,4,Advanced
+A175,Z03,Adyar,13.018089,80.264404,Available,3,Basic
+A176,Z04,Velachery,12.948535,80.220818,Available,2,Advanced
+A177,Z05,South-West Chennai,13.016278,80.159928,Dispatched,4,Basic
+A178,Z05,South-West Chennai,13.022055,80.196816,Available,1,Basic
+A179,Z04,Velachery,12.980952,80.177769,Standby,2,Basic
+A180,Z04,Velachery,12.967975,80.21565,Available,4,Basic
+A181,Z03,Adyar,12.98714,80.233244,Available,3,Basic
+A182,Z01,North Chennai,13.112996,80.296431,Available,4,Basic
+A183,Z03,Adyar,13.024367,80.237378,Dispatched,2,Basic
+A184,Z02,Central Chennai,13.074734,80.30008,Available,3,Basic
+A185,Z02,Central Chennai,13.097711,80.269273,Standby,4,Basic
+A186,Z03,Adyar,13.031328,80.255735,Available,1,Basic
+A187,Z01,North Chennai,13.093993,80.310143,Available,4,Advanced
+A188,Z05,South-West Chennai,13.022055,80.196816,Standby,3,Advanced
+A189,Z02,Central Chennai,13.07235,80.282111,Available,3,Basic
+A190,Z02,Central Chennai,13.056425,80.24259,Available,4,Advanced
+A191,Z02,Central Chennai,13.063301,80.275261,Available,3,Advanced
+A192,Z01,North Chennai,13.137797,80.290627,Available,3,Advanced
+A193,Z03,Adyar,13.006977,80.268942,Standby,3,Advanced
+A194,Z02,Central Chennai,13.054533,80.28701,Dispatched,3,Basic
+A195,Z03,Adyar,12.986957,80.269282,Dispatched,2,Basic
+A196,Z03,Adyar,13.010177,80.242593,Available,3,Basic
+A197,Z05,South-West Chennai,12.991793,80.154638,Dispatched,3,Basic
+A198,Z02,Central Chennai,13.101266,80.267873,Available,2,Basic
+A199,Z05,South-West Chennai,13.003661,80.199163,Standby,3,Basic
+A200,Z03,Adyar,12.980543,80.228596,Standby,3,Basic

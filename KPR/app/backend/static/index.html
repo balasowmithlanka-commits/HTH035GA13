@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Chennai Flood Emergency — Live Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{
+  --bg:#040c18;--bg2:#071426;--bg3:#0a1c34;--bg4:#0d2444;--bg5:#112952;
+  --border:#1a3a5c;--border2:#1e4570;--border3:#244e80;
+  --accent:#2563eb;--accent2:#3b82f6;--accent-bright:#60a5fa;--accent-glow:rgba(59,130,246,.25);
+  --critical:#ef4444;--critical-dim:rgba(239,68,68,.15);--critical-border:rgba(239,68,68,.4);
+  --high:#f97316;--high-dim:rgba(249,115,22,.12);--high-border:rgba(249,115,22,.35);
+  --medium:#eab308;--medium-dim:rgba(234,179,8,.1);--medium-border:rgba(234,179,8,.3);
+  --low:#22c55e;--low-dim:rgba(34,197,94,.1);--low-border:rgba(34,197,94,.3);
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --green:#22c55e;--cyan:#06b6d4;--purple:#a855f7;--pink:#ec4899;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --t-fast:120ms;--t-base:220ms;--radius:8px;--radius-lg:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px}
+#app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* ── Header ── */
+#header{
+  display:flex;align-items:center;gap:10px;padding:0 14px;height:44px;flex-shrink:0;
+  background:linear-gradient(90deg,#020a14 0%,#071426 60%,#04102000 100%);
+  border-bottom:1px solid var(--border);position:relative;z-index:200;
+}
+.hdr-logo{display:flex;align-items:center;gap:8px;margin-right:6px}
+.hdr-logo-icon{font-size:18px}
+.hdr-logo-text{font-size:15px;font-weight:900;letter-spacing:-0.5px;
+  background:linear-gradient(135deg,#60a5fa,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.8px;text-transform:uppercase}
+.hdr-badge.live{background:rgba(239,68,68,.2);color:#ef4444;border:1px solid rgba(239,68,68,.4);animation:blink 1.4s ease infinite}
+.hdr-sep{width:1px;height:20px;background:var(--border);margin:0 4px}
+.hdr-stat{display:flex;flex-direction:column;align-items:center;min-width:50px}
+.hdr-stat-val{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--accent-bright);line-height:1}
+.hdr-stat-lbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.hdr-stat.critical .hdr-stat-val{color:var(--critical)}
+.hdr-stat.warn .hdr-stat-val{color:var(--high)}
+.hdr-stat.green .hdr-stat-val{color:var(--green)}
+.hdr-time{font-size:20px;font-weight:900;font-family:var(--mono);color:#fff;letter-spacing:1px}
+.hdr-controls{display:flex;align-items:center;gap:5px;margin-left:auto}
+.hdr-controls select{background:var(--bg3);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:3px 6px;font-size:11px;font-family:var(--font);cursor:pointer}
+.btn{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:var(--font);letter-spacing:.3px;transition:all var(--t-fast);white-space:nowrap}
+.btn-start{background:linear-gradient(135deg,#15803d,#16a34a);color:#fff}
+.btn-start:hover{background:linear-gradient(135deg,#166534,#15803d);transform:translateY(-1px)}
+.btn-pause{background:rgba(234,179,8,.15);color:var(--medium);border:1px solid var(--medium-border)}
+.btn-resume{background:rgba(34,197,94,.12);color:var(--green);border:1px solid var(--low-border)}
+.btn-demo{background:linear-gradient(135deg,#7c3aed,#9333ea);color:#fff}
+.btn-demo:hover{background:linear-gradient(135deg,#6d28d9,#7c3aed)}
+.btn-reset{background:rgba(239,68,68,.12);color:var(--critical);border:1px solid var(--critical-border)}
+.btn-plan{background:linear-gradient(135deg,var(--accent),#1d4ed8);color:#fff}
+.btn-evt{background:var(--bg3);color:var(--text2);border:1px solid var(--border);font-size:10px;padding:4px 7px}
+.btn-evt:hover{border-color:var(--border3);color:var(--text)}
+
+/* ── Main layout ── */
+#main{display:flex;flex:1;overflow:hidden;gap:0}
+
+/* ── Left panel ── */
+#panel-left{
+  width:240px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--bg2);border-right:1px solid var(--border);overflow:hidden;
+}
+
+/* ── Map ── */
+#map-wrap{flex:1;position:relative;overflow:hidden}
+#map{width:100%;height:100%}
+.map-overlay-badge{
+  position:absolute;bottom:8px;left:8px;z-index:500;
+  background:rgba(4,12,24,.85);border:1px solid var(--border2);
+  border-radius:6px;padding:4px 10px;font-size:10px;color:var(--text3);
+  backdrop-filter:blur(4px);
+}
+.leaflet-tooltip-dark{background:rgba(4,12,24,.92);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:11px;border-radius:4px;padding:4px 8px}
+
+/* ── Right panel ── */
+#panel-right{
+  width:310px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--bg2);border-left:1px solid var(--border);overflow:hidden;
+}
+
+/* ── Panel section ── */
+.panel-sect{display:flex;flex-direction:column;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-sect-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.panel-sect-title{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3)}
+.panel-sect-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px}
+.badge-critical{background:var(--critical-dim);color:var(--critical);border:1px solid var(--critical-border)}
+.badge-green{background:rgba(34,197,94,.12);color:var(--green);border:1px solid var(--low-border)}
+.badge-blue{background:rgba(37,99,235,.15);color:var(--accent-bright);border:1px solid rgba(37,99,235,.3)}
+
+/* ── Zone cards ── */
+#zones-list{overflow-y:auto;flex:1;padding:4px}
+.zone-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:8px 10px;margin-bottom:4px;cursor:pointer;transition:all var(--t-fast);
+  position:relative;overflow:hidden;
+}
+.zone-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.zone-card.CRITICAL::before{background:var(--critical)}
+.zone-card.HIGH::before{background:var(--high)}
+.zone-card.MEDIUM::before{background:var(--medium)}
+.zone-card.LOW::before{background:var(--low)}
+.zone-card:hover{background:var(--bg4);border-color:var(--border2)}
+.zone-card.selected{border-color:var(--accent-bright);background:rgba(37,99,235,.08)}
+.zone-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.zone-name{font-weight:700;font-size:12px;color:var(--text)}
+.zone-pill{font-size:8px;font-weight:700;padding:2px 6px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px}
+.zone-pill.CRITICAL{background:var(--critical-dim);color:var(--critical);border:1px solid var(--critical-border)}
+.zone-pill.HIGH{background:var(--high-dim);color:var(--high);border:1px solid var(--high-border)}
+.zone-pill.MEDIUM{background:var(--medium-dim);color:var(--medium);border:1px solid var(--medium-border)}
+.zone-pill.LOW{background:var(--low-dim);color:var(--low);border:1px solid var(--low-border)}
+.zone-stats{display:grid;grid-template-columns:1fr 1fr;gap:3px}
+.zone-stat{font-size:10px;color:var(--text2)}
+.zone-stat span{color:var(--text);font-weight:600}
+.zone-flood-bar{height:3px;background:var(--bg5);border-radius:2px;margin-top:5px;overflow:hidden}
+.zone-flood-fill{height:100%;border-radius:2px;transition:width .5s}
+.flood-fill-CRITICAL{background:var(--critical)}
+.flood-fill-HIGH{background:var(--high)}
+.flood-fill-MEDIUM{background:var(--medium)}
+.flood-fill-LOW{background:var(--low)}
+
+/* ── Events (left panel) ── */
+#events-wrap{flex-shrink:0;border-top:1px solid var(--border);display:flex;flex-direction:column;height:160px}
+#events-list{overflow-y:auto;flex:1;padding:4px}
+.evt-item{display:flex;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;font-size:10px;animation:slideIn .3s ease}
+.evt-item:hover{background:var(--bg3)}
+.evt-icon{flex-shrink:0;width:16px;text-align:center}
+.evt-text{color:var(--text2);line-height:1.35;flex:1}
+.evt-time{color:var(--text3);font-family:var(--mono);font-size:9px;flex-shrink:0}
+.evt-item.CRITICAL .evt-text{color:var(--critical)}
+.evt-item.HIGH .evt-text{color:var(--high)}
+.evt-item.SYSTEM .evt-text{color:var(--cyan)}
+
+/* ── Event trigger buttons ── */
+#event-btns{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;border-top:1px solid var(--border);flex-shrink:0}
+
+/* ── Right panel tabs ── */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg3)}
+.tab{padding:7px 10px;font-size:9px;font-weight:700;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;transition:all var(--t-fast);letter-spacing:.5px;text-transform:uppercase}
+.tab.active{color:var(--accent-bright);border-bottom-color:var(--accent-bright)}
+.tab-pane{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.tab-pane.active{display:flex}
+
+/* ── Agent cards ── */
+.agent-card{
+  display:flex;align-items:flex-start;gap:8px;padding:8px 10px;
+  border-bottom:1px solid var(--border);transition:background var(--t-fast);cursor:pointer;
+}
+.agent-card:hover{background:var(--bg3)}
+.agent-card.active-agent{background:rgba(37,99,235,.06);border-left:2px solid var(--accent)}
+.agent-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.agent-dot.analyzing{background:var(--accent-bright);box-shadow:0 0 6px var(--accent-bright);animation:blink 1s ease infinite}
+.agent-dot.requesting{background:var(--medium);box-shadow:0 0 6px var(--medium);animation:blink 1.2s ease infinite}
+.agent-dot.resolving{background:var(--critical);box-shadow:0 0 6px var(--critical)}
+.agent-dot.ready{background:var(--green)}
+.agent-dot.planning{background:var(--purple);animation:blink 0.9s ease infinite}
+.agent-info{flex:1}
+.agent-name{font-weight:700;font-size:11px;color:var(--text)}
+.agent-status-badge{font-size:8px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:5px;text-transform:uppercase;letter-spacing:.4px}
+.agent-status-badge.analyzing{background:rgba(59,130,246,.2);color:var(--accent-bright)}
+.agent-status-badge.requesting{background:rgba(234,179,8,.2);color:var(--medium)}
+.agent-status-badge.resolving{background:rgba(239,68,68,.2);color:var(--critical)}
+.agent-status-badge.ready{background:rgba(34,197,94,.15);color:var(--green)}
+.agent-status-badge.planning{background:rgba(168,85,247,.2);color:var(--purple)}
+.agent-sub{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.35}
+
+/* ── Decision log ── */
+#decisions-list{padding:6px;display:flex;flex-direction:column;gap:4px}
+.decision-item{
+  background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 9px;
+  font-size:10px;animation:slideIn .4s ease;border-left:3px solid var(--border2);
+}
+.decision-item.COORDINATOR{border-left-color:var(--accent-bright)}
+.decision-item.RESCUE{border-left-color:var(--critical)}
+.decision-item.ROUTING{border-left-color:var(--cyan)}
+.decision-item.COMMUNICATION{border-left-color:var(--purple)}
+.decision-item.MEDICAL{border-left-color:var(--green)}
+.decision-item.RESOURCE{border-left-color:var(--high)}
+.decision-item.HOSPITAL{border-left-color:var(--pink)}
+.dec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.dec-agent{font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2)}
+.dec-time{font-size:8px;color:var(--text3);font-family:var(--mono)}
+.dec-text{color:var(--text);line-height:1.4}
+
+/* ── Vehicle panel ── */
+#vehicles-list{padding:6px;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.veh-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 9px;
+  cursor:pointer;transition:all var(--t-fast);display:flex;align-items:flex-start;gap:8px;
+}
+.veh-card:hover{border-color:var(--border2);background:var(--bg4)}
+.veh-icon{font-size:16px;line-height:1;flex-shrink:0}
+.veh-info{flex:1}
+.veh-id{font-weight:700;font-size:11px;font-family:var(--mono);color:var(--accent-bright)}
+.veh-route{font-size:10px;color:var(--text2);margin-top:1px}
+.veh-status-row{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.veh-status{font-size:8px;font-weight:700;padding:1px 6px;border-radius:8px;text-transform:uppercase}
+.veh-status.enroute{background:rgba(34,197,94,.15);color:var(--green);border:1px solid var(--low-border)}
+.veh-status.inflight{background:rgba(6,182,212,.15);color:var(--cyan);border:1px solid rgba(6,182,212,.3)}
+.veh-status.loading{background:rgba(234,179,8,.15);color:var(--medium);border:1px solid var(--medium-border)}
+.veh-status.returning{background:rgba(100,116,139,.15);color:var(--text3);border:1px solid var(--border2)}
+.veh-eta{font-size:9px;color:var(--text3);font-family:var(--mono)}
+.veh-patients{font-size:9px;color:var(--text2)}
+.veh-prog{height:2px;background:var(--bg5);border-radius:1px;margin-top:5px;overflow:hidden}
+.veh-prog-fill{height:100%;border-radius:1px;background:var(--accent-bright);transition:width .5s}
+
+/* ── Bottom section ── */
+#bottom{
+  height:220px;flex-shrink:0;display:flex;border-top:1px solid var(--border);
+  background:var(--bg2);overflow:hidden;
+}
+
+/* ── Resource panel ── */
+#res-panel{width:300px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:6px;overflow-y:auto;flex:1}
+.res-card{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px;transition:border-color var(--t-fast)}
+.res-card.depleted{border-color:var(--critical-border)}
+.res-card.warning{border-color:var(--high-border)}
+.res-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:4px}
+.res-count{font-size:17px;font-weight:900;font-family:var(--mono);line-height:1;color:var(--text)}
+.res-total{font-size:10px;color:var(--text3);margin-top:1px}
+.res-bar{height:3px;background:var(--bg5);border-radius:2px;margin-top:6px;overflow:hidden}
+.res-bar-fill{height:100%;border-radius:2px;transition:width .6s}
+.fill-blue{background:var(--accent-bright)}
+.fill-green{background:var(--green)}
+.fill-orange{background:var(--high)}
+.fill-red{background:var(--critical)}
+.fill-cyan{background:var(--cyan)}
+.fill-purple{background:var(--purple)}
+
+/* ── Charts panel ── */
+#charts-panel{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden}
+.chart-row{display:flex;gap:0;flex:1;overflow:hidden}
+.chart-box{flex:1;display:flex;flex-direction:column;padding:6px 8px;border-right:1px solid var(--border)}
+.chart-box:last-child{border-right:none}
+.chart-title{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:4px}
+.chart-canvas-wrap{flex:1;position:relative;min-height:0}
+canvas.chart-cvs{position:absolute;top:0;left:0;width:100%;height:100%}
+
+/* ── Timeline + Alert ── */
+#right-bottom{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.rb-tab-bar{display:flex;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0}
+#timeline-pane,#alert-pane,#whatchanged-pane{display:none;flex:1;overflow-y:auto;flex-direction:column}
+#timeline-pane.active,#alert-pane.active,#whatchanged-pane.active{display:flex}
+#timeline-list{padding:6px;display:flex;flex-direction:column;gap:3px}
+.tl-item{display:flex;gap:7px;font-size:10px;padding:3px 4px;border-radius:4px;animation:slideIn .3s ease}
+.tl-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.tl-content{flex:1;color:var(--text2);line-height:1.35}
+.tl-time{font-family:var(--mono);font-size:9px;color:var(--text3);flex-shrink:0}
+#alert-box{padding:8px;display:flex;flex-direction:column;gap:6px}
+.alert-banner{background:rgba(239,68,68,.12);border:1px solid var(--critical-border);border-radius:6px;padding:8px 10px}
+.alert-title{font-size:10px;font-weight:700;color:var(--critical);margin-bottom:4px}
+.alert-body{font-size:10px;color:var(--text2);line-height:1.5}
+.alert-actions{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+.alert-btn{font-size:9px;padding:3px 8px;border-radius:4px;background:var(--bg4);border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-family:var(--font);transition:all var(--t-fast)}
+.alert-btn:hover{border-color:var(--border3);color:var(--text)}
+#whatchanged-list{padding:6px;display:flex;flex-direction:column;gap:3px}
+.wc-item{display:flex;gap:6px;font-size:10px;padding:4px 6px;border-radius:4px;animation:slideIn .3s ease}
+.wc-item:hover{background:var(--bg3)}
+.wc-icon{flex-shrink:0;width:14px;text-align:center;font-size:11px}
+.wc-text{color:var(--text2);flex:1;line-height:1.35}
+.wc-text .up{color:var(--critical)}
+.wc-text .down{color:var(--green)}
+.wc-text .warn{color:var(--high)}
+
+/* ── Modal ── */
+#zone-modal{
+  display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;
+  background:rgba(4,12,24,.7);backdrop-filter:blur(4px);
+}
+#zone-modal.open{display:flex}
+.modal-box{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-lg);
+  width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg3)}
+.modal-title{font-weight:700;font-size:14px}
+.modal-close{cursor:pointer;color:var(--text3);font-size:18px;line-height:1;padding:0 4px}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.modal-sect-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:6px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.detail-item{background:var(--bg4);border-radius:6px;padding:7px 9px}
+.detail-lbl{font-size:9px;color:var(--text3);margin-bottom:2px}
+.detail-val{font-size:12px;font-weight:700;color:var(--text)}
+
+/* ── Hospital / Shelter popups ── */
+.map-popup-dark .leaflet-popup-content-wrapper{
+  background:rgba(7,20,38,.95);border:1px solid var(--border2);border-radius:8px;color:var(--text);
+  font-family:var(--font);font-size:11px;box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.map-popup-dark .leaflet-popup-tip{background:rgba(7,20,38,.95)}
+.popup-title{font-weight:700;font-size:12px;color:var(--accent-bright);margin-bottom:6px}
+.popup-row{display:flex;justify-content:space-between;gap:12px;padding:2px 0;border-bottom:1px solid var(--border)}
+.popup-row:last-child{border-bottom:none}
+.popup-key{color:var(--text3)}
+.popup-val{font-weight:600;color:var(--text)}
+.popup-val.critical{color:var(--critical)}
+.popup-val.warn{color:var(--high)}
+.popup-val.ok{color:var(--green)}
+
+/* ── Notification ── */
+#notification{
+  display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:3000;
+  background:linear-gradient(135deg,#7f1d1d,#991b1b);color:#fff;
+  border:1px solid var(--critical-border);border-radius:10px;
+  padding:10px 20px;font-size:12px;font-weight:600;box-shadow:0 4px 20px rgba(239,68,68,.35);
+  max-width:500px;text-align:center;animation:slideUp .3s ease;
+}
+#notification.info{background:linear-gradient(135deg,var(--accent),#1d4ed8);box-shadow:0 4px 20px var(--accent-glow)}
+#notification.success{background:linear-gradient(135deg,#15803d,#166534);box-shadow:0 4px 20px rgba(34,197,94,.25)}
+
+/* ── Leaflet vehicle markers ── */
+.veh-marker{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(7,20,38,.9);border:2px solid;font-size:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;
+  transition:transform .15s;pointer-events:all;
+}
+.veh-marker:hover{transform:scale(1.2)}
+.veh-marker.amb{border-color:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.4)}
+.veh-marker.rescue{border-color:#f97316;box-shadow:0 0 10px rgba(249,115,22,.35)}
+.veh-marker.heli{border-color:#06b6d4;box-shadow:0 0 10px rgba(6,182,212,.4)}
+.veh-marker.relief{border-color:#a855f7;box-shadow:0 0 10px rgba(168,85,247,.35)}
+.veh-marker.bus{border-color:#eab308;box-shadow:0 0 10px rgba(234,179,8,.3)}
+.veh-label{
+  position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  background:rgba(4,12,24,.9);border:1px solid var(--border2);border-radius:4px;
+  padding:1px 5px;font-size:8px;font-family:var(--mono);color:var(--text);white-space:nowrap;
+  pointer-events:none;
+}
+
+/* ── Animations ── */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes pulse-ring{0%{transform:scale(.95);opacity:.7}100%{transform:scale(1.5);opacity:0}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* ── Scrollbars ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--border3)}
+</style>
+</head>
+<body>
+<div id="app">
+<!-- ── Header ── -->
+<header id="header">
+  <div class="hdr-logo">
+    <span class="hdr-logo-icon">🌊</span>
+    <span class="hdr-logo-text">ChennaiFLOOD</span>
+    <span class="hdr-badge live" id="hdr-live-badge">● SIMULATION</span>
+  </div>
+  <div class="hdr-sep"></div>
+  <div class="hdr-stat"><div class="hdr-stat-val" id="hdr-time">09:00:00</div><div class="hdr-stat-lbl">Sim Time</div></div>
+  <div class="hdr-sep"></div>
+  <div class="hdr-stat warn"><div class="hdr-stat-val" id="hdr-rain">0 mm/h</div><div class="hdr-stat-lbl">Rainfall</div></div>
+  <div class="hdr-stat critical"><div class="hdr-stat-val" id="hdr-zones">0</div><div class="hdr-stat-lbl">Zones</div></div>
+  <div class="hdr-stat critical"><div class="hdr-stat-val" id="hdr-critical">0</div><div class="hdr-stat-lbl">Critical</div></div>
+  <div class="hdr-stat green"><div class="hdr-stat-val" id="hdr-missions">0</div><div class="hdr-stat-lbl">Missions</div></div>
+  <div class="hdr-stat"><div class="hdr-stat-val" id="hdr-evac" style="color:var(--cyan)">0</div><div class="hdr-stat-lbl">Evacuating</div></div>
+  <div class="hdr-sep"></div>
+  <div class="hdr-controls">
+    <select id="speed-sel" onchange="setSpeed(this.value)" title="Simulation Speed">
+      <option value="1">1x</option><option value="2">2x</option>
+      <option value="5">5x</option><option value="10">10x</option>
+    </select>
+    <button class="btn btn-start" id="btn-start" onclick="ctrlSim('start')">▶ START</button>
+    <button class="btn btn-pause" id="btn-pause" onclick="ctrlSim('pause')" style="display:none">⏸ PAUSE</button>
+    <button class="btn btn-resume" id="btn-resume" onclick="ctrlSim('resume')" style="display:none">▶ RESUME</button>
+    <button class="btn btn-plan" onclick="genPlan()">⚡ GEN PLAN</button>
+    <button class="btn btn-demo" id="btn-demo" onclick="startDemo()">🎬 DEMO</button>
+    <button class="btn btn-reset" onclick="ctrlSim('reset')">↺ RESET</button>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<div id="main">
+
+  <!-- Left panel -->
+  <div id="panel-left">
+    <div class="panel-sect" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="panel-sect-hdr">
+        <span class="panel-sect-title">Affected Zones</span>
+        <span class="panel-sect-badge badge-critical" id="zone-count-badge">0 zones</span>
+      </div>
+      <div id="zones-list"></div>
+    </div>
+    <div id="events-wrap">
+      <div class="panel-sect-hdr">
+        <span class="panel-sect-title">Simulation Events</span>
+        <span class="panel-sect-badge badge-blue" id="evt-count-badge">0 events</span>
+      </div>
+      <div id="events-list"></div>
+      <div id="event-btns">
+        <button class="btn btn-evt" onclick="triggerEvt('rain')" title="Heavy Rainfall">🌧 Rain</button>
+        <button class="btn btn-evt" onclick="triggerEvt('flood')" title="Flood Surge">🌊 Surge</button>
+        <button class="btn btn-evt" onclick="triggerEvt('road')" title="Road Block">🚧 Block</button>
+        <button class="btn btn-evt" onclick="triggerEvt('hospital')" title="Hospital Overload">🏥 Hosp</button>
+        <button class="btn btn-evt" onclick="triggerEvt('power')" title="Power Failure">⚡ Power</button>
+        <button class="btn btn-evt" onclick="triggerEvt('comm')" title="Comms Failure">📡 Comm</button>
+        <button class="btn btn-evt" onclick="triggerEvt('evac')" title="Mass Evacuation">🚨 Evac</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map -->
+  <div id="map-wrap">
+    <div id="map"></div>
+    <div class="map-overlay-badge">Simulation only — not official data | © OpenStreetMap contributors</div>
+  </div>
+
+  <!-- Right panel -->
+  <div id="panel-right">
+    <div class="panel-sect-hdr" style="padding:7px 10px">
+      <span class="panel-sect-title">Multi-Agent System</span>
+      <span class="panel-sect-badge badge-blue" id="agent-active-badge">0 active</span>
+    </div>
+    <div id="agents-list" style="flex-shrink:0"></div>
+    <div class="tab-bar">
+      <div class="tab active" id="rtab-decisions" onclick="switchRTab('decisions',this)">AI Decisions</div>
+      <div class="tab" id="rtab-agents" onclick="switchRTab('agents',this)">Agent Log</div>
+      <div class="tab" id="rtab-vehicles" onclick="switchRTab('vehicles',this)">Vehicles</div>
+    </div>
+    <div class="tab-pane active" id="rpane-decisions"><div id="decisions-list"></div></div>
+    <div class="tab-pane" id="rpane-agents"><div id="agent-log-list" style="padding:6px;display:flex;flex-direction:column;gap:3px"></div></div>
+    <div class="tab-pane" id="rpane-vehicles"><div id="vehicles-list"></div></div>
+  </div>
+</div>
+
+<!-- ── Bottom ── -->
+<div id="bottom">
+  <!-- Resources -->
+  <div id="res-panel">
+    <div class="panel-sect-hdr"><span class="panel-sect-title">Resource Pool</span><span class="panel-sect-badge badge-green" id="res-updated">Live</span></div>
+    <div class="res-grid" id="res-grid"></div>
+  </div>
+  <!-- Charts -->
+  <div id="charts-panel">
+    <div class="panel-sect-hdr"><span class="panel-sect-title">Live Analytics</span></div>
+    <div class="chart-row">
+      <div class="chart-box">
+        <div class="chart-title">🌧 Rainfall (mm/h)</div>
+        <div class="chart-canvas-wrap"><canvas id="cvs-rain" class="chart-cvs"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">🌊 Water Levels (m)</div>
+        <div class="chart-canvas-wrap"><canvas id="cvs-flood" class="chart-cvs"></canvas></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">🚑 Resource Utilisation</div>
+        <div class="chart-canvas-wrap" id="util-chart-wrap"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Timeline/Alert/WhatChanged -->
+  <div id="right-bottom">
+    <div class="rb-tab-bar">
+      <div class="tab active" onclick="switchBTab('timeline',this)">Timeline</div>
+      <div class="tab" onclick="switchBTab('alert',this)">Alert</div>
+      <div class="tab" onclick="switchBTab('whatchanged',this)">What Changed?</div>
+    </div>
+    <div id="timeline-pane" class="active"><div id="timeline-list"></div></div>
+    <div id="alert-pane"><div id="alert-box"><div class="alert-banner"><div class="alert-title">⚠️ No active alerts</div><div class="alert-body">System nominal. Start simulation to monitor alerts.</div></div></div></div>
+    <div id="whatchanged-pane"><div id="whatchanged-list"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- Modal -->
+<div id="zone-modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-title">Zone Details</div>
+      <span class="modal-close" onclick="closeModal()">✕</span>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div id="notification"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+
+// ════════════════════════════════════════════════════════════════════
+// SIMULATION ENGINE — CLIENT SIDE
+// ════════════════════════════════════════════════════════════════════
+
+// ── Chennai geography ────────────────────────────────────────────────
+const ZONES_GEO = {
+  'Z-NC': {name:'North Chennai',   lat:13.120, lng:80.290, r:3200},
+  'Z-CC': {name:'Central Chennai', lat:13.080, lng:80.270, r:2800},
+  'Z-AD': {name:'Adyar',           lat:13.005, lng:80.255, r:2500},
+  'Z-VL': {name:'Velachery',       lat:12.978, lng:80.218, r:2700},
+  'Z-SW': {name:'South-West',      lat:12.940, lng:80.180, r:3000},
+  'Z-PG': {name:'Perungudi',       lat:12.960, lng:80.248, r:2200},
+  'Z-TB': {name:'Tambaram',        lat:12.925, lng:80.125, r:2400},
+  'Z-SH': {name:'Sholinganallur',  lat:12.900, lng:80.228, r:2300},
+  'Z-GU': {name:'Guindy',          lat:13.010, lng:80.212, r:2100},
+  'Z-AB': {name:'Ambattur',        lat:13.118, lng:80.162, r:2600},
+};
+
+const HOSPITALS = [
+  {id:'H1', name:'Govt General Hospital',      lat:13.076, lng:80.262, beds:1200, icu:80,  occ:0.62},
+  {id:'H2', name:'Rajiv Gandhi Govt Hospital', lat:13.070, lng:80.278, beds:900,  icu:60,  occ:0.55},
+  {id:'H3', name:'Stanley Medical College',    lat:13.105, lng:80.293, beds:800,  icu:50,  occ:0.58},
+  {id:'H4', name:'Govt Hospital Saidapet',     lat:13.012, lng:80.225, beds:400,  icu:25,  occ:0.48},
+  {id:'H5', name:'Govt Hospital Perambur',     lat:13.122, lng:80.232, beds:350,  icu:20,  occ:0.44},
+];
+
+const SHELTERS = [
+  {id:'S1', name:'Chennai Trade Centre',     lat:13.065, lng:80.223, cap:5000, occ:0.30},
+  {id:'S2', name:'Indoor Stadium Perambur',  lat:13.125, lng:80.240, cap:4000, occ:0.25},
+  {id:'S3', name:'Tambaram Sports Complex',  lat:12.928, lng:80.118, cap:6000, occ:0.20},
+  {id:'S4', name:'Guindy Relief Camp',       lat:13.008, lng:80.208, cap:3500, occ:0.35},
+  {id:'S5', name:'VGP Relief Camp Velachery',lat:12.975, lng:80.212, cap:4500, occ:0.28},
+];
+
+// ── Simulation state ─────────────────────────────────────────────────
+let SIM = {
+  running: false, paused: false, demoMode: false, speed: 1,
+  tick: 0, simMinutes: 540, // 09:00
+  rainfall: 45, rainfallTarget: 45,
+  zones: {}, vehicles: {}, hospitals: [], shelters: [],
+  resources: {
+    ambulances:     {total:40, deployed:8},
+    rescueVehicles: {total:60, deployed:12},
+    helicopters:    {total:6,  deployed:1},
+    medicalTeams:   {total:30, deployed:5},
+    reliefTrucks:   {total:25, deployed:4},
+    evacBuses:      {total:20, deployed:3},
+    foodPackets:    {total:328531, deployed:102084},
+    waterLitres:    {total:1050642, deployed:210000},
+    shelterSlots:   {total:23000, deployed:7200},
+  },
+  events: [], decisions: [], timeline: [], whatChanged: [],
+  vehicleIdCounter: 1, missionIdCounter: 1,
+  rainfallHistory: Array(60).fill(45),
+  floodHistory: {},
+  totalEvacuating: 0, totalEvacuated: 0,
+};
+
+// ── Init zones ────────────────────────────────────────────────────────
+// ── Data-driven severity scoring (mirrors backend) ───────────────────
+function computeSeverityScore(z){
+  const floodScore = Math.min(100, (z.flood / 2.5) * 100);
+  const critScore  = Math.min(100, (z.crit / 40) * 100);
+  const roadScore  = Math.min(100, ((z.blocked_roads||0) / 10) * 100);
+  const riskPct    = (z.risk / Math.max(1, z.pop)) * 100;
+  const riskScore  = Math.min(100, (riskPct / 35) * 100);
+  const shelterGap = 0.3; // default
+  const shelterScore = shelterGap * 100;
+  return Math.round(
+    floodScore  * 0.35 +
+    critScore   * 0.20 +
+    roadScore   * 0.15 +
+    riskScore   * 0.15 +
+    shelterScore* 0.15
+  );
+}
+function severityFromScore(score){
+  if(score >= 81) return 'CRITICAL';
+  if(score >= 61) return 'HIGH';
+  if(score >= 31) return 'MEDIUM';
+  return 'LOW';
+}
+
+function initZones(){
+  const initData = [
+    {id:'Z-NC', pop:150000, risk:38000,  flood:1.85, crit:25, blocked_roads:7},  // HIGH (64)
+    {id:'Z-CC', pop:120000, risk:16000,  flood:1.05, crit:10, blocked_roads:3},  // MEDIUM (34)
+    {id:'Z-AD', pop:110000, risk:32000,  flood:1.72, crit:24, blocked_roads:6},  // HIGH (62)
+    {id:'Z-VL', pop:130000, risk:48000,  flood:2.35, crit:40, blocked_roads:9},  // CRITICAL (86)
+    {id:'Z-SW', pop:160000, risk:4200,   flood:0.28, crit:2,  blocked_roads:0},  // LOW (11)
+  ];
+  initData.forEach(d => {
+    const geo = ZONES_GEO[d.id];
+    const score = computeSeverityScore(d);
+    const sev = severityFromScore(score);
+    SIM.zones[d.id] = {
+      ...d, ...geo, sev, sevScore: score,
+      evacuating: Math.floor(d.risk * 0.08),
+      evacuated: Math.floor(d.risk * 0.02),
+      floodTarget: d.flood,
+      sevLevel: ['LOW','MEDIUM','HIGH','CRITICAL'].indexOf(sev),
+    };
+    SIM.floodHistory[d.id] = Array(60).fill(d.flood);
+  });
+  SIM.hospitals = HOSPITALS.map(h => ({...h, incoming:0, overflow:false}));
+  SIM.shelters  = SHELTERS.map(s => ({...s, occupants: Math.floor(s.cap * s.occ), food: s.cap*3, water: s.cap*5}));
+}
+
+// ── Vehicle factory ───────────────────────────────────────────────────
+function makeVehicle(type, fromZoneId, toId, toType){
+  const id = `${type.toUpperCase().slice(0,3)}-${String(SIM.vehicleIdCounter++).padStart(3,'0')}`;
+  const fz = SIM.zones[fromZoneId] || Object.values(SIM.zones)[0];
+  let toLat, toLng, toName;
+  if(toType === 'hospital'){
+    const h = SIM.hospitals.find(x=>x.id===toId) || SIM.hospitals[0];
+    toLat=h.lat; toLng=h.lng; toName=h.name;
+  } else if(toType === 'shelter'){
+    const s = SIM.shelters.find(x=>x.id===toId) || SIM.shelters[0];
+    toLat=s.lat; toLng=s.lng; toName=s.name;
+  } else {
+    const tz = SIM.zones[toId] || fz;
+    toLat=tz.lat; toLng=tz.lng; toName=tz.name;
+  }
+  // Generate intermediate waypoints
+  const waypoints = generateRoute(fz.lat, fz.lng, toLat, toLng);
+  const dist = Math.hypot(toLat-fz.lat, toLng-fz.lng) * 111; // km
+  const speed = type==='heli' ? 120 : type==='amb' ? 45 : 35; // km/h sim
+  const etaMin = Math.round(dist/speed * 60);
+  const v = {
+    id, type, icon: {amb:'🚑',rescue:'🚒',heli:'🚁',relief:'🚚',bus:'🚌'}[type]||'🚗',
+    from: fz.name, to: toName, fromZone: fromZoneId,
+    waypoints, wpIdx: 0, progress: 0, // progress 0..1 along current segment
+    lat: fz.lat, lng: fz.lng,
+    status: type==='heli' ? 'inflight' : 'enroute',
+    eta: etaMin, etaMax: etaMin,
+    patients: type==='amb' ? Math.floor(Math.random()*3)+1 : 0,
+    mission: type==='heli' ? 'Medical Evacuation' : type==='rescue' ? 'Zone Rescue' : type==='bus' ? 'Mass Evacuation' : 'Supply Delivery',
+    marker: null, routeLine: null, done: false,
+  };
+  return v;
+}
+
+function generateRoute(lat1, lng1, lat2, lng2){
+  // Add 2-3 intermediate points with slight jitter for realism
+  const pts = [[lat1,lng1]];
+  const steps = 2 + Math.floor(Math.random()*2);
+  for(let i=1;i<=steps;i++){
+    const t = i/(steps+1);
+    const jLat = (Math.random()-0.5)*0.01;
+    const jLng = (Math.random()-0.5)*0.012;
+    pts.push([lat1 + (lat2-lat1)*t + jLat, lng1 + (lng2-lng1)*t + jLng]);
+  }
+  pts.push([lat2,lng2]);
+  return pts;
+}
+
+// ── Spawn initial vehicles ────────────────────────────────────────────
+function spawnInitialVehicles(){
+  const zonesArr = Object.keys(SIM.zones);
+  const hosps = SIM.hospitals;
+  // Ambulances
+  [['Z-AD','H1'],['Z-VL','H2'],['Z-SW','H3'],['Z-NC','H1'],['Z-CC','H4']].forEach(([z,h])=>{
+    addVehicle(makeVehicle('amb', z, h, 'hospital'));
+  });
+  // Rescue vehicles
+  [['Z-VL','Z-SW'],['Z-NC','Z-CC'],['Z-SW','Z-AD']].forEach(([f,t])=>{
+    addVehicle(makeVehicle('rescue', f, t, 'zone'));
+  });
+  // Helicopter
+  addVehicle(makeVehicle('heli', 'Z-VL', 'H2', 'hospital'));
+  // Relief trucks
+  [['Z-NC','S2'],['Z-SW','S3']].forEach(([z,s])=>{
+    addVehicle(makeVehicle('relief', z, s, 'shelter'));
+  });
+  // Evac buses
+  addVehicle(makeVehicle('bus', 'Z-SW', 'S3', 'shelter'));
+}
+
+function addVehicle(v){
+  SIM.vehicles[v.id] = v;
+  if(map) createVehicleMarker(v);
+}
+
+// ── Simulation tick ───────────────────────────────────────────────────
+let simInterval = null;
+
+function simTick(){
+  if(!SIM.running || SIM.paused) return;
+  SIM.tick++;
+  SIM.simMinutes += 0.5; // 30 sec per tick at 1x
+  if(SIM.simMinutes >= 1440) SIM.simMinutes -= 1440;
+
+  // Rainfall evolution
+  SIM.rainfall += (SIM.rainfallTarget - SIM.rainfall) * 0.05 + (Math.random()-0.5)*1.5;
+  SIM.rainfall = Math.max(10, Math.min(150, SIM.rainfall));
+  SIM.rainfallHistory.push(SIM.rainfall);
+  if(SIM.rainfallHistory.length > 60) SIM.rainfallHistory.shift();
+
+  // Update zones
+  Object.values(SIM.zones).forEach(z => {
+    const rainfallEffect = SIM.rainfall / 500;
+    z.floodTarget = Math.max(0.05, Math.min(2.5, z.floodTarget + rainfallEffect + (Math.random()-0.48)*0.005));
+    z.flood += (z.floodTarget - z.flood) * 0.08;
+    z.flood = Math.max(0.05, z.flood);
+
+    // Severity — data-driven scoring
+    z.blocked_roads = Math.min(12, Math.floor(z.flood * 6));
+    z.risk = Math.min(z.pop, Math.floor(z.pop * Math.min(0.6, z.flood * 0.35)));
+    z.crit = Math.floor(z.risk * 0.04 * Math.min(1.5, z.flood));
+    z.sevScore = computeSeverityScore(z);
+    const newSev = severityFromScore(z.sevScore);
+    const oldSev = z.sev;
+    z.sev = newSev;
+
+    // Evacuation
+    const evacRate = Math.floor(z.risk * 0.002 * SIM.speed);
+    z.evacuating = Math.min(z.risk, (z.evacuating||0) + Math.floor(Math.random()*evacRate));
+    z.evacuated  = (z.evacuated||0) + Math.floor(Math.random()*Math.max(0, evacRate*0.4));
+
+    SIM.floodHistory[z.id] = SIM.floodHistory[z.id] || Array(60).fill(z.flood);
+    SIM.floodHistory[z.id].push(z.flood);
+    if(SIM.floodHistory[z.id].length > 60) SIM.floodHistory[z.id].shift();
+
+    // Severity change events
+    if(newSev !== oldSev && newSev === 'CRITICAL'){
+      addDecision('COORDINATOR', `🔴 ${z.name} escalated to CRITICAL — flood level ${z.flood.toFixed(2)}m`);
+      addTimeline(`⚠️ ${z.name} → CRITICAL (${z.flood.toFixed(2)}m)`);
+      addWhatChanged(`↑ ${z.name} severity: ${oldSev} → CRITICAL`, 'up');
+      triggerCriticalAlert(z);
+    } else if(newSev !== oldSev && oldSev === 'CRITICAL'){
+      addDecision('COORDINATOR', `✅ ${z.name} situation improving — ${newSev}`);
+    }
+  });
+
+  // Total evacuating
+  SIM.totalEvacuating = Object.values(SIM.zones).reduce((s,z)=>s+(z.evacuating||0), 0);
+  SIM.totalEvacuated  = Object.values(SIM.zones).reduce((s,z)=>s+(z.evacuated||0), 0);
+
+  // Resources fluctuate
+  const R = SIM.resources;
+  Object.keys(R).forEach(k => {
+    const r = R[k];
+    if(r.deployed > 0 && Math.random() < 0.03){
+      // Mission complete — return some
+      const ret = Math.max(1, Math.floor(r.deployed * 0.05));
+      r.deployed = Math.max(0, r.deployed - ret);
+    }
+  });
+
+  // Hospital occupancy drift
+  SIM.hospitals.forEach(h => {
+    h.occ = Math.min(0.98, h.occ + (Math.random()-0.47)*0.005);
+    h.incoming = Math.max(0, h.incoming + Math.floor(Math.random()*3) - 1);
+    if(h.occ > 0.9 && !h.overflow){
+      h.overflow = true;
+      addDecision('HOSPITAL', `🏥 ${h.name} at ${(h.occ*100).toFixed(0)}% capacity — redirecting ambulances`);
+      addTimeline(`🏥 ${h.name} nearing capacity`);
+    } else if(h.occ < 0.85) h.overflow = false;
+  });
+
+  // Shelter occupancy
+  SIM.shelters.forEach(s => {
+    const influx = Math.floor(Math.random() * 20 * SIM.speed);
+    s.occupants = Math.min(s.cap, s.occupants + influx);
+    s.occ = s.occupants / s.cap;
+    if(s.occ > 0.9 && Math.random() < 0.01){
+      addDecision('RESOURCE', `⚠️ ${s.name} at ${(s.occ*100).toFixed(0)}% — requesting additional supplies`);
+    }
+  });
+
+  // Move vehicles
+  advanceVehicles();
+
+  // Agent decisions (periodic)
+  if(SIM.tick % 8 === 0) agentDecisionCycle();
+
+  // What changed periodic
+  if(SIM.tick % 20 === 0) buildWhatChanged();
+
+  // Update UI
+  renderAll();
+}
+
+// ── Vehicle movement ──────────────────────────────────────────────────
+function advanceVehicles(){
+  const speedFactor = 0.004 * SIM.speed;
+  Object.values(SIM.vehicles).forEach(v => {
+    if(v.done) return;
+    const wps = v.waypoints;
+    if(v.wpIdx >= wps.length - 1){ completeMission(v); return; }
+    v.progress += speedFactor * (v.type==='heli' ? 2.5 : 1);
+    if(v.progress >= 1){
+      v.progress = 0;
+      v.wpIdx++;
+      if(v.wpIdx >= wps.length - 1){ completeMission(v); return; }
+    }
+    const wp1 = wps[v.wpIdx], wp2 = wps[v.wpIdx+1];
+    v.lat = wp1[0] + (wp2[0]-wp1[0]) * v.progress;
+    v.lng = wp1[1] + (wp2[1]-wp1[1]) * v.progress;
+    // ETA
+    const remaining = (wps.length-1-v.wpIdx-v.progress);
+    v.eta = Math.max(0, Math.round(remaining / speedFactor / 60 * (v.type==='heli'?0.4:1)));
+    updateVehicleMarker(v);
+  });
+
+  // Spawn new vehicles periodically
+  if(SIM.tick % 15 === 0 && SIM.running){
+    spawnRandomVehicle();
+  }
+}
+
+function completeMission(v){
+  v.done = true;
+  const R = SIM.resources;
+  if(v.type==='amb' && R.ambulances.deployed > 0){
+    R.ambulances.deployed--;
+    SIM.hospitals.forEach(h=>{if(h.name===v.to) h.incoming += v.patients||0});
+  }
+  if(v.type==='rescue' && R.rescueVehicles.deployed > 0) R.rescueVehicles.deployed--;
+  if(v.type==='heli'   && R.helicopters.deployed > 0)    R.helicopters.deployed--;
+  if(v.type==='relief' && R.reliefTrucks.deployed > 0)   R.reliefTrucks.deployed--;
+  if(v.type==='bus'    && R.evacBuses.deployed > 0)      R.evacBuses.deployed--;
+  addTimeline(`✅ ${v.id} completed: ${v.from} → ${v.to}`);
+  if(v.marker){ map.removeLayer(v.marker); v.marker=null; }
+  if(v.routeLine){ map.removeLayer(v.routeLine); v.routeLine=null; }
+  delete SIM.vehicles[v.id];
+}
+
+function spawnRandomVehicle(){
+  const zkeys = Object.keys(SIM.zones);
+  const critZones = zkeys.filter(k=>SIM.zones[k].sev==='CRITICAL');
+  if(critZones.length===0) return;
+  const fromZ = critZones[Math.floor(Math.random()*critZones.length)];
+  const R = SIM.resources;
+  const types = [];
+  if(R.ambulances.deployed < R.ambulances.total-5) types.push('amb');
+  if(R.rescueVehicles.deployed < R.rescueVehicles.total-8) types.push('rescue');
+  if(R.reliefTrucks.deployed < R.reliefTrucks.total-4) types.push('relief');
+  if(R.evacBuses.deployed < R.evacBuses.total-3) types.push('bus');
+  if(types.length===0) return;
+  const type = types[Math.floor(Math.random()*types.length)];
+  let v;
+  if(type==='amb'){
+    const h = SIM.hospitals.filter(x=>!x.overflow)[0] || SIM.hospitals[0];
+    v = makeVehicle('amb', fromZ, h.id, 'hospital');
+    R.ambulances.deployed = Math.min(R.ambulances.total, R.ambulances.deployed+1);
+  } else if(type==='rescue'){
+    const toZ = zkeys[(zkeys.indexOf(fromZ)+1)%zkeys.length];
+    v = makeVehicle('rescue', fromZ, toZ, 'zone');
+    R.rescueVehicles.deployed = Math.min(R.rescueVehicles.total, R.rescueVehicles.deployed+1);
+  } else if(type==='relief'){
+    const s = SIM.shelters[Math.floor(Math.random()*SIM.shelters.length)];
+    v = makeVehicle('relief', fromZ, s.id, 'shelter');
+    R.reliefTrucks.deployed = Math.min(R.reliefTrucks.total, R.reliefTrucks.deployed+1);
+  } else {
+    const s = SIM.shelters[Math.floor(Math.random()*SIM.shelters.length)];
+    v = makeVehicle('bus', fromZ, s.id, 'shelter');
+    R.evacBuses.deployed = Math.min(R.evacBuses.total, R.evacBuses.deployed+1);
+  }
+  addVehicle(v);
+}
+
+// ── Agent decision cycle ──────────────────────────────────────────────
+const AGENT_DECISIONS = {
+  ROUTING:[
+    z=>`📍 Calculating optimal route to ${z.name} — ${z.blocked_roads} roads blocked`,
+    z=>`🔀 Alternative route via Guindy confirmed — ETA +${Math.floor(Math.random()*8)+3}min`,
+    z=>`🛣️ Emergency corridor activated through ${z.name}`,
+    z=>`⚠️ OMR flooded near ${z.name} — rerouting via ECR`,
+  ],
+  RESCUE:[
+    z=>`🚑 Dispatching ${Math.floor(Math.random()*3)+1} ambulances to ${z.name}`,
+    z=>`🚒 Rescue unit deployed — ${z.crit} critical patients in ${z.name}`,
+    z=>`🆘 Priority rescue: ${z.name} (flood ${z.flood.toFixed(2)}m)`,
+    z=>`✅ Search & rescue complete in sector ${z.name.split(' ')[0]}`,
+  ],
+  RESOURCE:[
+    z=>`📦 Redistributing water/food to ${z.name} shelter`,
+    z=>`⚡ Medical supplies running low — requesting resupply for ${z.name}`,
+    z=>`🏕️ Opening overflow shelter near ${z.name}`,
+    z=>`✅ 500 food packets dispatched to ${z.name}`,
+  ],
+  COMMUNICATION:[
+    z=>`📡 CRITICAL ALERT issued for ${z.name} — SMS to ${Math.floor(Math.random()*5000)+1000} residents`,
+    z=>`📻 Emergency broadcast: evacuate ${z.name} immediately`,
+    z=>`🔔 Updating public dashboard for ${z.name} situation`,
+    z=>`📱 Evacuation route shared via public app — ${z.name}`,
+  ],
+  HOSPITAL:[
+    h=>`🏥 ${h.name}: ${Math.floor(h.occ*100)}% capacity — ${Math.floor(h.beds*(1-h.occ))} beds free`,
+    h=>`💉 ICU surge protocol at ${h.name} — ${h.icu} ICU units`,
+    h=>`🚑 Redirecting ambulances from ${h.name} (full) to alternative`,
+    h=>`✅ ${Math.floor(Math.random()*12)+3} patients treated and stabilised at ${h.name}`,
+  ],
+  COORDINATOR:[
+    z=>`🎯 Allocating resources: ${Math.floor(Math.random()*5)+2} amb + ${Math.floor(Math.random()*3)+1} rescue to ${z.name}`,
+    z=>`⚡ CRITICAL PRIORITY: ${z.name} — helicopter deployment approved`,
+    z=>`📋 Response Plan updated — ${Object.keys(SIM.zones).length} zones covered`,
+    z=>`✅ Conflict resolved: medical resources prioritised for ${z.name}`,
+  ],
+};
+
+function agentDecisionCycle(){
+  const zones = Object.values(SIM.zones).sort((a,b)=>b.flood-a.flood);
+  const critZones = zones.filter(z=>z.sev==='CRITICAL');
+  const targetZ = critZones[0] || zones[0];
+  const targetH = SIM.hospitals.sort((a,b)=>b.occ-a.occ)[0];
+  const agents = Object.keys(AGENT_DECISIONS);
+  const agent = agents[SIM.tick % agents.length];
+  const msgs = AGENT_DECISIONS[agent];
+  const msg = msgs[Math.floor(Math.random()*msgs.length)];
+  const text = agent === 'HOSPITAL' ? msg(targetH) : msg(targetZ);
+  addDecision(agent, text);
+}
+
+function triggerCriticalAlert(z){
+  const alertBox = document.getElementById('alert-box');
+  if(!alertBox) return;
+  alertBox.innerHTML = `
+    <div class="alert-banner">
+      <div class="alert-title">🚨 CRITICAL FLOOD ALERT — ${z.name.toUpperCase()}</div>
+      <div class="alert-body">
+        Flood Level: <b>${z.flood.toFixed(2)}m</b> | Population at Risk: <b>${fmtNum(z.risk)}</b><br/>
+        Blocked Roads: <b>${z.blocked_roads}</b> | Critical Patients: <b>${fmtNum(z.crit)}</b><br/>
+        <br/><b>ACTIONS TAKEN:</b><br/>
+        • ${Math.floor(Math.random()*4)+2} ambulances dispatched<br/>
+        • ${Math.floor(Math.random()*2)+1} rescue vehicles deployed<br/>
+        • Helicopter deployment requested<br/>
+        • Emergency evacuation activated
+      </div>
+      <div class="alert-actions">
+        <button class="alert-btn" onclick="switchBTab('alert',document.querySelector('.rb-tab-bar .tab:nth-child(2)'))">View Alert</button>
+        <button class="alert-btn">📡 Send SMS</button>
+        <button class="alert-btn">📻 Broadcast</button>
+      </div>
+    </div>`;
+  showNotif(`🚨 CRITICAL ALERT: ${z.name} flood level ${z.flood.toFixed(2)}m`);
+}
+
+// ── Log helpers ───────────────────────────────────────────────────────
+function addDecision(agent, text){
+  const d = {agent, text, time: simTimeStr(), id: Date.now()};
+  SIM.decisions.unshift(d);
+  if(SIM.decisions.length > 80) SIM.decisions.pop();
+  renderDecisions();
+  renderAgentLog(d);
+}
+
+function addTimeline(text, color){
+  SIM.timeline.unshift({text, time: simTimeStr(), color: color||'#60a5fa'});
+  if(SIM.timeline.length > 60) SIM.timeline.pop();
+}
+
+function addWhatChanged(text, type){
+  SIM.whatChanged.unshift({text, type, time: simTimeStr()});
+  if(SIM.whatChanged.length > 30) SIM.whatChanged.pop();
+}
+
+function buildWhatChanged(){
+  const zones = Object.values(SIM.zones);
+  zones.forEach(z => {
+    if(Math.random() < 0.3){
+      const delta = ((Math.random()-0.45)*0.08).toFixed(2);
+      addWhatChanged(`${delta>0?'↑':'↓'} ${z.name} flood level ${delta>0?'+':''}${delta}m`, delta>0?'up':'down');
+    }
+  });
+  const R = SIM.resources;
+  if(Math.random() < 0.4) addWhatChanged(`↓ ${Math.floor(Math.random()*3)+1} ambulances returned to base`, 'down');
+  if(Math.random() < 0.3) addWhatChanged(`↑ ${Math.floor(Math.random()*3)+1} new roads blocked`, 'up');
+  if(Math.random() < 0.25) addWhatChanged(`🏥 Hospital occupancy +${Math.floor(Math.random()*5)+1}%`, 'warn');
+}
+
+function simTimeStr(){
+  const h = Math.floor(SIM.simMinutes/60)%24;
+  const m = Math.floor(SIM.simMinutes%60);
+  const s = Math.floor((Date.now()/1000)%60);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+// ── Manual event triggers ─────────────────────────────────────────────
+function triggerEvt(type){
+  if(!SIM.running){ showNotif('Start simulation first','info'); return; }
+  const zones = Object.values(SIM.zones);
+  const z = zones[Math.floor(Math.random()*zones.length)];
+  switch(type){
+    case 'rain':
+      SIM.rainfallTarget = Math.min(150, SIM.rainfall + 30 + Math.random()*20);
+      addDecision('COMMUNICATION', `🌧 Heavy rainfall event! ${SIM.rainfallTarget.toFixed(0)}mm/h`);
+      addTimeline('🌧 Heavy rainfall surge triggered');
+      addWhatChanged(`↑ Rainfall surge +${Math.floor(SIM.rainfallTarget-SIM.rainfall)}mm/h`, 'up');
+      showNotif('🌧 Heavy rainfall event triggered!');
+      break;
+    case 'flood':
+      z.floodTarget = Math.min(2.5, z.floodTarget + 0.3 + Math.random()*0.2);
+      addDecision('COORDINATOR', `🌊 Flood surge in ${z.name} — level rising to ${z.floodTarget.toFixed(2)}m`);
+      addTimeline(`🌊 Flood surge: ${z.name}`);
+      showNotif(`🌊 Flood surge in ${z.name}!`);
+      break;
+    case 'road':
+      z.blocked_roads = Math.min(15, z.blocked_roads + 2 + Math.floor(Math.random()*3));
+      addDecision('ROUTING', `🚧 ${Math.floor(Math.random()*3)+2} new roads blocked in ${z.name} — recalculating routes`);
+      addTimeline(`🚧 Road blocked: ${z.name}`);
+      addWhatChanged(`🚧 ${Math.floor(Math.random()*2)+2} new roads blocked in ${z.name}`, 'up');
+      showNotif(`🚧 Roads blocked in ${z.name}`);
+      break;
+    case 'hospital':
+      const h = SIM.hospitals[Math.floor(Math.random()*SIM.hospitals.length)];
+      h.occ = Math.min(0.98, h.occ + 0.15);
+      addDecision('HOSPITAL', `🏥 ${h.name} OVERLOADED (${(h.occ*100).toFixed(0)}%) — emergency protocol activated`);
+      addTimeline(`🏥 ${h.name} overloaded`);
+      showNotif(`🏥 Hospital overload at ${h.name}!`);
+      break;
+    case 'power':
+      addDecision('COORDINATOR', `⚡ Power failure in ${z.name} — backup generators activated`);
+      addTimeline(`⚡ Power failure: ${z.name}`);
+      showNotif(`⚡ Power failure in ${z.name}!`);
+      break;
+    case 'comm':
+      addDecision('COMMUNICATION', `📡 Communication disruption in ${z.name} — switching to radio backup`);
+      addTimeline(`📡 Comm failure: ${z.name}`);
+      showNotif(`📡 Communication failure in ${z.name}!`);
+      break;
+    case 'evac':
+      z.evacuating = Math.min(z.risk, (z.evacuating||0) + Math.floor(z.risk*0.1));
+      addDecision('RESCUE', `🚨 MASS EVACUATION ordered for ${z.name} — ${fmtNum(z.evacuating)} people`);
+      addTimeline(`🚨 Mass evacuation: ${z.name}`);
+      addWhatChanged(`↑ Mass evacuation ordered: ${z.name}`, 'up');
+      const buses = Math.floor(Math.random()*3)+2;
+      for(let i=0;i<buses;i++){
+        const s = SIM.shelters[Math.floor(Math.random()*SIM.shelters.length)];
+        addVehicle(makeVehicle('bus', z.id, s.id, 'shelter'));
+        SIM.resources.evacBuses.deployed = Math.min(SIM.resources.evacBuses.total, SIM.resources.evacBuses.deployed+1);
+      }
+      showNotif(`🚨 Mass evacuation triggered in ${z.name}!`);
+      break;
+  }
+  renderAll();
+}
+
+// ════════════════════════════════════════════════════════════════════
+// MAP — Leaflet setup + animated markers
+// ════════════════════════════════════════════════════════════════════
+let map, zoneCircles={}, zoneLabels={}, hospitalMarkers=[], shelterMarkers=[];
+
+function initMap(){
+  map = L.map('map',{
+    center:[13.05, 80.22], zoom:12, zoomControl:true,
+    attributionControl:false,
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:18, attribution:'© OSM'
+  }).addTo(map);
+  L.control.attribution({prefix:'© OpenStreetMap'}).addTo(map);
+
+  // Severity legend
+  const legend = L.control({position:'bottomright'});
+  legend.onAdd = function(){
+    const div = L.DomUtil.create('div','map-legend');
+    div.innerHTML = `<div style="background:rgba(4,12,24,.92);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;font-size:10px;color:#e2e8f0;min-width:90px">
+      <div style="font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:.6px;color:#94a3b8;margin-bottom:5px">Severity</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block"></span> Critical</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="width:10px;height:10px;border-radius:50%;background:#f97316;display:inline-block"></span> High</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="width:10px;height:10px;border-radius:50%;background:#eab308;display:inline-block"></span> Medium</div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#22c55e;display:inline-block"></span> Low</div>
+    </div>`;
+    return div;
+  };
+  legend.addTo(map);
+
+  // Zone circles
+  Object.entries(ZONES_GEO).forEach(([id,geo])=>{
+    const z = SIM.zones[id];
+    if(!z) return;
+    const col = sevColor(z ? z.sev : 'LOW');
+    const circle = L.circle([geo.lat, geo.lng], {
+      radius: geo.r, color: col, fillColor: col,
+      fillOpacity: 0.18, weight: 2, opacity: 0.7,
+      className: `zone-circle zone-${id}`,
+    }).addTo(map);
+    circle.on('click', ()=>openZoneModal(id));
+    circle.bindTooltip(geo.name, {className:'leaflet-tooltip-dark', sticky:true});
+    zoneCircles[id] = circle;
+
+    const lbl = L.divIcon({
+      html:`<div style="font-size:10px;font-weight:700;color:#e2e8f0;text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap">${geo.name}</div>`,
+      iconAnchor:[40,0], className:''
+    });
+    zoneLabels[id] = L.marker([geo.lat, geo.lng+0.005], {icon:lbl, interactive:false}).addTo(map);
+  });
+
+  // Hospital markers
+  SIM.hospitals.forEach(h=>{
+    const icon = L.divIcon({
+      html:`<div style="background:#3b82f6;border:2px solid #93c5fd;border-radius:4px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;box-shadow:0 0 8px rgba(59,130,246,.5)">H</div>`,
+      iconSize:[14,14], iconAnchor:[7,7], className:''
+    });
+    const m = L.marker([h.lat, h.lng], {icon, zIndexOffset:100})
+      .addTo(map)
+      .bindPopup(hospitalPopup(h), {className:'map-popup-dark', maxWidth:260});
+    hospitalMarkers.push({h, m});
+  });
+
+  // Shelter markers
+  SIM.shelters.forEach(s=>{
+    const icon = L.divIcon({
+      html:`<div style="background:#16a34a;border:2px solid #86efac;border-radius:50%;width:12px;height:12px;box-shadow:0 0 7px rgba(34,197,94,.4)"></div>`,
+      iconSize:[12,12], iconAnchor:[6,6], className:''
+    });
+    const m = L.marker([s.lat, s.lng], {icon, zIndexOffset:90})
+      .addTo(map)
+      .bindPopup(shelterPopup(s), {className:'map-popup-dark', maxWidth:220});
+    shelterMarkers.push({s, m});
+  });
+}
+
+function sevColor(sev){
+  return {CRITICAL:'#ef4444',HIGH:'#f97316',MEDIUM:'#eab308',LOW:'#22c55e'}[sev]||'#64748b';
+}
+
+function updateMapZones(){
+  Object.entries(SIM.zones).forEach(([id,z])=>{
+    const c = zoneCircles[id]; if(!c) return;
+    const col = sevColor(z.sev);
+    c.setStyle({color:col, fillColor:col, fillOpacity: z.sev==='CRITICAL'?0.28:z.sev==='HIGH'?0.2:0.14});
+    c.setRadius(ZONES_GEO[id].r * (1 + z.flood * 0.2));
+  });
+  // Update hospital popups
+  hospitalMarkers.forEach(({h,m}) => m.setPopupContent(hospitalPopup(h)));
+  shelterMarkers.forEach(({s,m}) => m.setPopupContent(shelterPopup(s)));
+}
+
+function hospitalPopup(h){
+  const occPct = (h.occ*100).toFixed(0);
+  const freeBeds = Math.floor(h.beds*(1-h.occ));
+  const cls = h.occ>0.9?'critical':h.occ>0.75?'warn':'ok';
+  return `<div class="popup-title">🏥 ${h.name}</div>
+    <div class="popup-row"><span class="popup-key">Capacity</span><span class="popup-val">${h.beds} beds</span></div>
+    <div class="popup-row"><span class="popup-key">Occupancy</span><span class="popup-val ${cls}">${occPct}%</span></div>
+    <div class="popup-row"><span class="popup-key">Free Beds</span><span class="popup-val ${freeBeds<50?'critical':'ok'}">${freeBeds}</span></div>
+    <div class="popup-row"><span class="popup-key">ICU Units</span><span class="popup-val">${h.icu}</span></div>
+    <div class="popup-row"><span class="popup-key">Incoming</span><span class="popup-val ${h.incoming>5?'warn':'ok'}">${h.incoming} patients</span></div>`;
+}
+
+function shelterPopup(s){
+  const pct = (s.occ*100).toFixed(0);
+  const avail = s.cap - s.occupants;
+  const cls = s.occ>0.9?'critical':s.occ>0.75?'warn':'ok';
+  return `<div class="popup-title">🏕️ ${s.name}</div>
+    <div class="popup-row"><span class="popup-key">Capacity</span><span class="popup-val">${fmtNum(s.cap)}</span></div>
+    <div class="popup-row"><span class="popup-key">Occupants</span><span class="popup-val ${cls}">${fmtNum(s.occupants)} (${pct}%)</span></div>
+    <div class="popup-row"><span class="popup-key">Available</span><span class="popup-val ${avail<200?'critical':'ok'}">${fmtNum(avail)}</span></div>
+    <div class="popup-row"><span class="popup-key">Food</span><span class="popup-val">${fmtNum(s.food)} pkt</span></div>`;
+}
+
+// ── Vehicle markers ───────────────────────────────────────────────────
+function createVehicleMarker(v){
+  const cls = {amb:'amb',rescue:'rescue',heli:'heli',relief:'relief',bus:'bus'}[v.type]||'amb';
+  const icon = L.divIcon({
+    html:`<div class="veh-marker ${cls}" title="${v.id}">${v.icon}</div>`,
+    iconSize:[28,28], iconAnchor:[14,14], className:'',
+  });
+  v.marker = L.marker([v.lat, v.lng], {icon, zIndexOffset:200})
+    .addTo(map)
+    .bindTooltip(`${v.id}<br/>${v.from} → ${v.to}<br/>ETA: ${v.eta}min`,
+      {className:'leaflet-tooltip-dark', sticky:true});
+  v.marker.on('click', ()=>focusVehicle(v.id));
+
+  // Route line
+  const lineColor = v.type==='heli'?'#06b6d4':v.type==='amb'?'#22c55e':v.type==='rescue'?'#f97316':'#a855f7';
+  v.routeLine = L.polyline(v.waypoints, {
+    color:lineColor, weight:v.type==='heli'?2:1.5,
+    opacity:0.5, dashArray:v.type==='heli'?'8,5':null,
+  }).addTo(map);
+}
+
+function updateVehicleMarker(v){
+  if(!v.marker) return;
+  v.marker.setLatLng([v.lat, v.lng]);
+  v.marker.setTooltipContent(`${v.id}<br/>${v.from} → ${v.to}<br/>ETA: ${v.eta}min`);
+}
+
+function focusVehicle(id){
+  const v = SIM.vehicles[id]; if(!v) return;
+  map.setView([v.lat, v.lng], 14, {animate:true, duration:0.5});
+  showNotif(`🎯 Focused: ${v.id} — ${v.status.toUpperCase()} → ${v.to}`, 'info');
+  // Switch to vehicles tab
+  document.getElementById('rtab-vehicles').click();
+}
+
+// ════════════════════════════════════════════════════════════════════
+// RENDERING
+// ════════════════════════════════════════════════════════════════════
+function renderAll(){
+  renderHeader();
+  renderZones();
+  renderResources();
+  renderVehicles();
+  renderCharts();
+  renderTimeline();
+  renderWhatChanged();
+  updateMapZones();
+}
+
+function renderHeader(){
+  const critCount = Object.values(SIM.zones).filter(z=>z.sev==='CRITICAL').length;
+  const activeMissions = Object.keys(SIM.vehicles).length;
+  el('hdr-time').textContent = simTimeStr();
+  el('hdr-rain').textContent = `${SIM.rainfall.toFixed(0)} mm/h`;
+  el('hdr-zones').textContent = Object.keys(SIM.zones).length;
+  el('hdr-critical').textContent = critCount;
+  el('hdr-missions').textContent = activeMissions;
+  el('hdr-evac').textContent = fmtNum(SIM.totalEvacuating);
+}
+
+function renderZones(){
+  const container = el('zones-list');
+  const zones = Object.values(SIM.zones).sort((a,b)=>{
+    const order={CRITICAL:0,HIGH:1,MEDIUM:2,LOW:3};
+    return (order[a.sev]||4)-(order[b.sev]||4);
+  });
+  el('zone-count-badge').textContent = `${zones.length} zones`;
+  const critN = zones.filter(z=>z.sev==='CRITICAL').length;
+
+  container.innerHTML = zones.map(z => {
+    const pct = Math.min(100, (z.flood / 2.5)*100);
+    return `<div class="zone-card ${z.sev}" onclick="openZoneModal('${z.id}')">
+      <div class="zone-top">
+        <div class="zone-name">${z.name}</div>
+        <div class="zone-pill ${z.sev}">${z.sev}</div>
+      </div>
+      <div class="zone-stats">
+        <div class="zone-stat">At Risk: <span>${fmtNum(z.risk)}</span></div>
+        <div class="zone-stat">Flood: <span>${z.flood.toFixed(2)}m</span></div>
+        <div class="zone-stat" style="color:var(--critical)">Critical: <span style="color:var(--critical)">${fmtNum(z.crit)}</span></div>
+        <div class="zone-stat">Roads: <span>${z.blocked_roads} blk</span></div>
+      </div>
+      <div class="zone-flood-bar"><div class="zone-flood-fill flood-fill-${z.sev}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderResources(){
+  const R = SIM.resources;
+  const items = [
+    {key:'ambulances',     label:'Ambulances',      color:'fill-green', icon:'🚑'},
+    {key:'rescueVehicles', label:'Rescue Vehicles',  color:'fill-orange',icon:'🚒'},
+    {key:'helicopters',    label:'Helicopters',       color:'fill-cyan',  icon:'🚁'},
+    {key:'medicalTeams',   label:'Medical Teams',     color:'fill-blue',  icon:'🏥'},
+    {key:'reliefTrucks',   label:'Relief Trucks',     color:'fill-purple',icon:'🚚'},
+    {key:'evacBuses',      label:'Evac Buses',        color:'fill-green', icon:'🚌'},
+  ];
+  el('res-grid').innerHTML = items.map(it=>{
+    const r = R[it.key];
+    const pct = Math.round((r.deployed/r.total)*100);
+    const cls = pct>85?'depleted':pct>65?'warning':'';
+    return `<div class="res-card ${cls}">
+      <div class="res-label">${it.icon} ${it.label}</div>
+      <div class="res-count">${r.deployed}<span style="font-size:11px;color:var(--text3);font-weight:400"> / ${r.total}</span></div>
+      <div class="res-total" style="color:var(--text3);font-size:9px">Deployed</div>
+      <div class="res-bar"><div class="res-bar-fill ${it.color}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+  el('res-updated').textContent = simTimeStr();
+}
+
+function renderVehicles(){
+  const vehs = Object.values(SIM.vehicles);
+  el('agent-active-badge').textContent = `${vehs.length} active`;
+  if(!el('rpane-vehicles').classList.contains('active')) return;
+  const container = el('vehicles-list');
+  container.innerHTML = vehs.slice(0,20).map(v=>{
+    const totalWp = v.waypoints.length-1;
+    const pct = Math.round(((v.wpIdx + v.progress)/Math.max(1,totalWp))*100);
+    return `<div class="veh-card" onclick="focusVehicle('${v.id}')">
+      <div class="veh-icon">${v.icon}</div>
+      <div class="veh-info">
+        <div class="veh-id">${v.id}</div>
+        <div class="veh-route">${v.from} → ${v.to}</div>
+        ${v.patients?`<div class="veh-patients">👤 ${v.patients} patients</div>`:''}
+        <div class="veh-status-row">
+          <span class="veh-status ${v.status}">${v.status.toUpperCase()}</span>
+          <span class="veh-eta">ETA ${v.eta}min</span>
+        </div>
+        <div class="veh-prog"><div class="veh-prog-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('') || '<div style="padding:12px;color:var(--text3);font-size:11px;text-align:center">No active vehicles</div>';
+}
+
+function renderDecisions(){
+  const container = el('decisions-list');
+  const items = SIM.decisions.slice(0,25);
+  container.innerHTML = items.map(d=>`
+    <div class="decision-item ${d.agent}">
+      <div class="dec-hdr">
+        <span class="dec-agent">${agentIcon(d.agent)} ${d.agent}</span>
+        <span class="dec-time">${d.time}</span>
+      </div>
+      <div class="dec-text">${escHtml(d.text)}</div>
+    </div>`).join('');
+}
+
+function renderAgentLog(d){
+  if(!el('rpane-agents').classList.contains('active')) return;
+  const container = el('agent-log-list');
+  const item = document.createElement('div');
+  item.style.cssText='display:flex;gap:8px;padding:5px 4px;border-bottom:1px solid var(--border);font-size:10px;animation:slideIn .3s ease';
+  item.innerHTML=`<span style="color:var(--text3);font-family:var(--mono);flex-shrink:0">${d.time}</span>
+    <span style="font-weight:700;color:${agentColor(d.agent)};flex-shrink:0">${d.agent}</span>
+    <span style="color:var(--text2)">${escHtml(d.text)}</span>`;
+  container.insertBefore(item, container.firstChild);
+  while(container.children.length > 40) container.removeChild(container.lastChild);
+}
+
+function renderTimeline(){
+  if(!el('timeline-pane').classList.contains('active')) return;
+  el('timeline-list').innerHTML = SIM.timeline.slice(0,30).map(t=>`
+    <div class="tl-item">
+      <div class="tl-dot" style="background:${t.color}"></div>
+      <div class="tl-content">${escHtml(t.text)}</div>
+      <div class="tl-time">${t.time}</div>
+    </div>`).join('');
+}
+
+function renderWhatChanged(){
+  if(!el('whatchanged-pane').classList.contains('active')) return;
+  el('whatchanged-list').innerHTML = SIM.whatChanged.slice(0,20).map(w=>{
+    const icon = w.type==='up'?'🔴':w.type==='down'?'🟢':'🟡';
+    const cls = w.type==='up'?'up':w.type==='down'?'down':'warn';
+    return `<div class="wc-item">
+      <span class="wc-icon">${icon}</span>
+      <span class="wc-text ${cls}">${escHtml(w.text)}</span>
+      <span style="font-size:9px;color:var(--text3);font-family:var(--mono);flex-shrink:0">${w.time}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Canvas charts ─────────────────────────────────────────────────────
+function renderCharts(){
+  drawRainfallChart();
+  drawFloodChart();
+  drawUtilChart();
+}
+
+function drawRainfallChart(){
+  const cvs = el('cvs-rain'); if(!cvs) return;
+  const wrap = cvs.parentElement;
+  cvs.width = wrap.clientWidth; cvs.height = wrap.clientHeight;
+  const ctx = cvs.getContext('2d');
+  const data = SIM.rainfallHistory;
+  const W=cvs.width, H=cvs.height, pad=4;
+  ctx.clearRect(0,0,W,H);
+  const max = Math.max(...data, 50);
+  ctx.strokeStyle='#f97316'; ctx.lineWidth=1.5; ctx.shadowColor='#f97316'; ctx.shadowBlur=4;
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=pad+(i/(data.length-1))*(W-pad*2);
+    const y=H-pad-(v/max)*(H-pad*2);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // Danger line at 80mm
+  ctx.shadowBlur=0; ctx.strokeStyle='rgba(239,68,68,.4)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  const dy = H-pad-(80/max)*(H-pad*2);
+  ctx.beginPath(); ctx.moveTo(pad,dy); ctx.lineTo(W-pad,dy); ctx.stroke();
+  ctx.setLineDash([]);
+  // Fill gradient
+  ctx.shadowBlur=0;
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'rgba(249,115,22,.25)'); grad.addColorStop(1,'rgba(249,115,22,0)');
+  ctx.fillStyle=grad; ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=pad+(i/(data.length-1))*(W-pad*2);
+    const y=H-pad-(v/max)*(H-pad*2);
+    i===0?ctx.moveTo(x,H):ctx.lineTo(x,y);
+  }); ctx.lineTo(W-pad,H); ctx.closePath(); ctx.fill();
+  // Current value
+  ctx.fillStyle='#f97316'; ctx.font='bold 10px JetBrains Mono,monospace';
+  ctx.fillText(`${SIM.rainfall.toFixed(0)}mm/h`,pad+2,pad+10);
+}
+
+function drawFloodChart(){
+  const cvs = el('cvs-flood'); if(!cvs) return;
+  const wrap = cvs.parentElement;
+  cvs.width = wrap.clientWidth; cvs.height = wrap.clientHeight;
+  const ctx = cvs.getContext('2d');
+  const W=cvs.width, H=cvs.height, pad=4;
+  ctx.clearRect(0,0,W,H);
+  const colors={'Z-NC':'#ef4444','Z-CC':'#f97316','Z-AD':'#eab308','Z-VL':'#22c55e','Z-SW':'#60a5fa'};
+  const zids = Object.keys(SIM.zones).slice(0,5);
+  const allVals = zids.flatMap(id=>SIM.floodHistory[id]||[]);
+  const max = Math.max(...allVals, 1.5);
+  // Danger line
+  ctx.strokeStyle='rgba(239,68,68,.35)'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  const dy = H-pad-(1.0/max)*(H-pad*2);
+  ctx.beginPath(); ctx.moveTo(pad,dy); ctx.lineTo(W-pad,dy); ctx.stroke();
+  ctx.setLineDash([]);
+  // Zone lines
+  zids.forEach((id,idx)=>{
+    const hist = SIM.floodHistory[id]; if(!hist) return;
+    const col = colors[id]||'#64748b';
+    ctx.strokeStyle=col; ctx.lineWidth=1.2; ctx.shadowColor=col; ctx.shadowBlur=3;
+    ctx.beginPath();
+    hist.forEach((v,i)=>{
+      const x=pad+(i/(hist.length-1))*(W-pad*2);
+      const y=H-pad-(v/max)*(H-pad*2);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    ctx.shadowBlur=0;
+  });
+  // Legend
+  ctx.font='8px Inter,sans-serif'; ctx.shadowBlur=0;
+  zids.slice(0,3).forEach((id,i)=>{
+    const z=SIM.zones[id]; if(!z) return;
+    ctx.fillStyle=colors[id]||'#64748b';
+    ctx.fillRect(pad+i*45,H-10,6,2);
+    ctx.fillText(z.name.split(' ')[0], pad+i*45+8, H-4);
+  });
+}
+
+function drawUtilChart(){
+  const wrap = el('util-chart-wrap'); if(!wrap) return;
+  const R = SIM.resources;
+  const items = [
+    {k:'ambulances',lbl:'Amb',col:'#22c55e'},
+    {k:'rescueVehicles',lbl:'Rescue',col:'#f97316'},
+    {k:'helicopters',lbl:'Heli',col:'#06b6d4'},
+    {k:'medicalTeams',lbl:'Med',col:'#60a5fa'},
+    {k:'evacBuses',lbl:'Bus',col:'#eab308'},
+  ];
+  const W=wrap.clientWidth||160, H=wrap.clientHeight||80;
+  const bw=(W-16)/(items.length*2-1), pad=8, chartH=H-20;
+  wrap.innerHTML = `<svg width="${W}" height="${H}" style="display:block">
+    ${items.map((it,i)=>{
+      const r=R[it.k];
+      const pct=r.deployed/r.total;
+      const bh=Math.max(2,pct*chartH);
+      const x=pad+i*(bw*2);
+      const y=pad+chartH-bh;
+      return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="${it.col}" rx="2" opacity="0.85"/>
+              <text x="${x+bw/2}" y="${H-4}" font-size="7" fill="#64748b" text-anchor="middle" font-family="Inter">${it.lbl}</text>
+              <text x="${x+bw/2}" y="${y-2}" font-size="7" fill="${it.col}" text-anchor="middle" font-weight="700">${Math.round(pct*100)}%</text>`;
+    }).join('')}
+  </svg>`;
+}
+
+// ── Agents summary panel ──────────────────────────────────────────────
+const AGENTS_META = [
+  {name:'Coordinator',    key:'COORDINATOR',   role:'Resolve conflicts & allocate resources'},
+  {name:'Rescue Agent',   key:'RESCUE',        role:'Dispatch vehicles to affected zones'},
+  {name:'Routing Agent',  key:'ROUTING',       role:'Calculate & reroute emergency paths'},
+  {name:'Medical Agent',  key:'MEDICAL',       role:'Manage ambulances & hospital intake'},
+  {name:'Resource Agent', key:'RESOURCE',      role:'Monitor supplies & redistribute'},
+  {name:'Hospital Agent', key:'HOSPITAL',      role:'Capacity management & triage'},
+  {name:'Comm Agent',     key:'COMMUNICATION', role:'Public alerts & broadcasts'},
+];
+const AGENT_STATUSES = ['analyzing','requesting','resolving','ready','planning'];
+
+function renderAgentSummary(){
+  const container = el('agents-list');
+  const activeCount = AGENTS_META.filter((_,i)=>i<4).length;
+  el('agent-active-badge').textContent = `${activeCount} active`;
+  container.innerHTML = AGENTS_META.map((a,i)=>{
+    const st = AGENT_STATUSES[i % AGENT_STATUSES.length];
+    const lastDec = SIM.decisions.find(d=>d.agent===a.key);
+    const sub = lastDec ? lastDec.text.slice(0,55)+'…' : a.role;
+    return `<div class="agent-card ${i<3?'active-agent':''}">
+      <div class="agent-dot ${st}"></div>
+      <div class="agent-info">
+        <div><span class="agent-name">${a.name}</span>
+          <span class="agent-status-badge ${st}">${st.toUpperCase()}</span></div>
+        <div class="agent-sub">${escHtml(sub)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Helper: agentIcon / agentColor ───────────────────────────────────
+function agentIcon(k){ return {COORDINATOR:'🎯',RESCUE:'🚑',ROUTING:'🗺️',COMMUNICATION:'📡',MEDICAL:'💉',RESOURCE:'📦',HOSPITAL:'🏥'}[k]||'🤖'; }
+function agentColor(k){ return {COORDINATOR:'#60a5fa',RESCUE:'#ef4444',ROUTING:'#06b6d4',COMMUNICATION:'#a855f7',MEDICAL:'#22c55e',RESOURCE:'#f97316',HOSPITAL:'#ec4899'}[k]||'#94a3b8'; }
+
+// ── Zone modal ────────────────────────────────────────────────────────
+function openZoneModal(id){
+  const z = SIM.zones[id]; if(!z) return;
+  const sevBg = {CRITICAL:'critical-dim',HIGH:'high-dim',MEDIUM:'medium-dim',LOW:'low-dim'}[z.sev]||'low-dim';
+  const sevFg = {CRITICAL:'critical',HIGH:'high',MEDIUM:'medium',LOW:'low'}[z.sev]||'low';
+  const scoreColor = z.sevScore>=81?'var(--critical)':z.sevScore>=61?'var(--high)':z.sevScore>=31?'var(--medium)':'var(--green)';
+  const reason = z.sevScore>=81
+    ? `High flood level (${z.flood.toFixed(2)}m) + ${z.crit} critical patients + ${z.blocked_roads} blocked roads`
+    : z.sevScore>=61
+    ? `Elevated flood (${z.flood.toFixed(2)}m) + ${z.crit} critical patients requiring medical response`
+    : z.sevScore>=31
+    ? `Moderate flood (${z.flood.toFixed(2)}m) — situation being monitored, preventive measures active`
+    : `Low flood level (${z.flood.toFixed(2)}m) — situation stable, reserve resources on standby`;
+  el('modal-title').innerHTML = `${z.name} <span style="font-size:11px;padding:2px 7px;border-radius:10px;background:var(--${sevBg});color:var(--${sevFg})">${z.sev}</span>`;
+  el('modal-body').innerHTML = `
+    <div style="background:var(--bg4);border-radius:8px;padding:10px 12px;border-left:4px solid ${scoreColor};margin-bottom:4px">
+      <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Severity Score</div>
+      <div style="font-size:22px;font-weight:900;font-family:var(--mono);color:${scoreColor}">${z.sevScore}<span style="font-size:12px;color:var(--text3);font-weight:400">/100</span></div>
+      <div style="font-size:10px;color:var(--text2);margin-top:4px;line-height:1.4"><b>Reason:</b> ${reason}</div>
+    </div>
+    <div>
+      <div class="modal-sect-title">Situation</div>
+      <div class="detail-grid">
+        ${dItem('Population',fmtNum(z.pop))}
+        ${dItem('At Risk',fmtNum(z.risk),'var(--high)')}
+        ${dItem('Critical Patients',fmtNum(z.crit),'var(--critical)')}
+        ${dItem('Flood Level',z.flood.toFixed(2)+'m')}
+        ${dItem('Blocked Roads',z.blocked_roads)}
+        ${dItem('Severity',z.sev, `var(--${sevFg})`)}
+        ${dItem('Evacuating',fmtNum(z.evacuating||0))}
+        ${dItem('Evacuated',fmtNum(z.evacuated||0),'var(--green)')}
+      </div>
+    </div>
+    <div>
+      <div class="modal-sect-title">Resource Demand</div>
+      <div class="detail-grid">
+        ${dItem('Ambulances',z.sev==='CRITICAL'?'5 required':z.sev==='HIGH'?'2-3 required':z.sev==='MEDIUM'?'1 standby':'0 — monitoring')}
+        ${dItem('Rescue Vehicles',z.sev==='CRITICAL'?'3 required':z.sev==='HIGH'?'1-2 required':'0 — reserve')}
+        ${dItem('Medical Teams',z.sev==='CRITICAL'?'4 required':z.sev==='HIGH'?'2 required':z.sev==='MEDIUM'?'1 standby':'0')}
+        ${dItem('Helicopter',z.sev==='CRITICAL'&&z.blocked_roads>=6?'Requested':'Not needed')}
+      </div>
+    </div>
+    <div>
+      <div class="modal-sect-title">Active Vehicles in/near zone</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        ${Object.values(SIM.vehicles).filter(v=>v.fromZone===id).slice(0,8).map(v=>`
+          <div style="background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:10px;cursor:pointer" onclick="focusVehicle('${v.id}');closeModal()">
+            ${v.icon} ${v.id} → ${v.to}
+          </div>`).join('') || '<span style="color:var(--text3);font-size:10px">None assigned</span>'}
+      </div>
+    </div>`;
+  el('zone-modal').classList.add('open');
+}
+function closeModal(){ el('zone-modal').classList.remove('open'); }
+function dItem(k,v,col=''){
+  return `<div class="detail-item"><div class="detail-lbl">${k}</div><div class="detail-val" style="color:${col||'var(--text)'}">${v}</div></div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// CONTROLS + DEMO + WEBSOCKET + INIT
+// ════════════════════════════════════════════════════════════════════
+
+// ── Simulation controls ───────────────────────────────────────────────
+function ctrlSim(action){
+  if(action==='start'){
+    if(SIM.running){ showNotif('Already running','info'); return; }
+    SIM.running=true; SIM.paused=false;
+    startSimLoop();
+    // Start backend too
+    fetch('/api/simulation/start',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({speed:SIM.speed})}).catch(()=>{});
+    el('btn-start').style.display='none';
+    el('btn-pause').style.display='flex';
+    el('btn-resume').style.display='none';
+    addTimeline('🟢 Simulation started');
+    addDecision('COORDINATOR','📋 System initialised — 5 critical zones active, monitoring initiated');
+    showNotif('✅ Simulation started!', 'success');
+  } else if(action==='pause'){
+    SIM.paused=true;
+    fetch('/api/simulation/pause',{method:'POST'}).catch(()=>{});
+    el('btn-pause').style.display='none';
+    el('btn-resume').style.display='flex';
+    showNotif('⏸ Simulation paused','info');
+  } else if(action==='resume'){
+    SIM.paused=false;
+    fetch('/api/simulation/resume',{method:'POST'}).catch(()=>{});
+    el('btn-pause').style.display='flex';
+    el('btn-resume').style.display='none';
+    showNotif('▶ Simulation resumed','success');
+  } else if(action==='reset'){
+    clearInterval(simInterval); simInterval=null;
+    // Remove all vehicle markers
+    Object.values(SIM.vehicles).forEach(v=>{
+      if(v.marker) map.removeLayer(v.marker);
+      if(v.routeLine) map.removeLayer(v.routeLine);
+    });
+    SIM = {...SIM, running:false, paused:false, demoMode:false, tick:0, simMinutes:540,
+      rainfall:45, rainfallTarget:45, zones:{}, vehicles:{}, events:[], decisions:[],
+      timeline:[], whatChanged:[], vehicleIdCounter:1, missionIdCounter:1,
+      totalEvacuating:0, totalEvacuated:0,
+      rainfallHistory:Array(60).fill(45), floodHistory:{}};
+    initZones();
+    fetch('/api/simulation/reset',{method:'POST'}).catch(()=>{});
+    el('btn-start').style.display='flex';
+    el('btn-pause').style.display='none';
+    el('btn-resume').style.display='none';
+    el('btn-demo').disabled=false;
+    renderAll();
+    renderAgentSummary();
+    updateMapZones();
+    showNotif('↺ Simulation reset','info');
+  }
+}
+
+function setSpeed(v){
+  SIM.speed = parseFloat(v)||1;
+  clearInterval(simInterval);
+  if(SIM.running && !SIM.paused) startSimLoop();
+  fetch('/api/simulation/speed',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({speed:SIM.speed})}).catch(()=>{});
+}
+
+function startSimLoop(){
+  clearInterval(simInterval);
+  const interval = Math.max(100, Math.round(1000/SIM.speed));
+  simInterval = setInterval(simTick, interval);
+}
+
+// ── Plan generation ────────────────────────────────────────────────────
+function genPlan(){
+  fetch('/api/plan/generate',{method:'POST'})
+    .then(r=>r.json())
+    .then(p=>{
+      addDecision('COORDINATOR',`📋 Response Plan V${(p.version||1)} generated — ${Object.keys(SIM.zones).length} zone allocations`);
+      addTimeline('📋 Response plan generated');
+      showNotif('✅ Response Plan generated!','success');
+    }).catch(()=>{
+      addDecision('COORDINATOR','📋 Response Plan generated (local) — all zones covered');
+      showNotif('✅ Response Plan generated!','success');
+    });
+}
+
+// ── Demo mode ──────────────────────────────────────────────────────────
+const DEMO_SCRIPT = [
+  {t:0,   fn:()=>{ ctrlSim('start'); showNotif('🎬 DEMO MODE — Full disaster scenario'); }},
+  {t:3,   fn:()=>{ triggerEvt('rain'); addTimeline('🌧 Heavy rainfall begins — 95mm/h'); }},
+  {t:8,   fn:()=>{ triggerEvt('flood'); addTimeline('🌊 Velachery flood level critical'); }},
+  {t:14,  fn:()=>{ triggerEvt('road'); addTimeline('🚧 Mount Road blocked — rerouting'); addDecision('ROUTING','🔀 Mount Road flooded — emergency corridor via Guindy activated. ETA +6min'); }},
+  {t:20,  fn:()=>{ const v=makeVehicle('heli','Z-VL','H2','hospital'); SIM.resources.helicopters.deployed++; addVehicle(v); addDecision('COORDINATOR','🚁 Helicopter deployed to Velachery — roads inaccessible'); addTimeline('🚁 Helicopter airborne: Velachery → Rajiv Gandhi Hospital'); }},
+  {t:26,  fn:()=>{ triggerEvt('hospital'); addTimeline('🏥 GGH at 95% capacity — triage protocol activated'); }},
+  {t:32,  fn:()=>{ triggerEvt('evac'); addTimeline('🚨 Mass evacuation ordered — South-West Chennai'); }},
+  {t:38,  fn:()=>{ addDecision('COMMUNICATION','📡 CRITICAL ALERT issued — SMS sent to 48,200 residents. Evacuation routes: ECR, GST Road'); triggerEvt('flood'); }},
+  {t:46,  fn:()=>{ addDecision('RESOURCE','📦 Water tankers dispatched to Shelter-03. Food packets: 12,000 units en route'); addTimeline('📦 Relief supplies dispatched to Tambaram shelter'); }},
+  {t:55,  fn:()=>{ SIM.rainfallTarget=25; addDecision('COORDINATOR','✅ Rainfall decreasing — situation stabilising. Continuing rescue ops.'); addTimeline('🟡 Rainfall easing — stabilisation phase begins'); }},
+  {t:70,  fn:()=>{ addDecision('COORDINATOR','✅ System stabilising — Zone severity improving. 12,400 evacuated safely.'); addTimeline('✅ Phase 2 complete — evacuation success'); showNotif('✅ DEMO COMPLETE — Scenario executed successfully','success'); el('btn-demo').disabled=false; }},
+];
+
+let demoStep=0, demoTimer=null;
+
+function startDemo(){
+  if(SIM.demoMode){ showNotif('Demo already running','info'); return; }
+  SIM.demoMode=true; demoStep=0;
+  el('btn-demo').disabled=true;
+  ctrlSim('reset');
+  setTimeout(()=>{
+    runDemoStep();
+  }, 500);
+}
+
+function runDemoStep(){
+  if(demoStep >= DEMO_SCRIPT.length) return;
+  const step = DEMO_SCRIPT[demoStep++];
+  step.fn();
+  if(demoStep < DEMO_SCRIPT.length){
+    const nextDelay = (DEMO_SCRIPT[demoStep].t - DEMO_SCRIPT[demoStep-1].t) * 1000;
+    demoTimer = setTimeout(runDemoStep, Math.max(500, nextDelay));
+  }
+}
+
+// ── Tab switchers ─────────────────────────────────────────────────────
+function switchRTab(tab, el_){
+  ['decisions','agents','vehicles'].forEach(t=>{
+    const p=el(`rpane-${t}`); if(p){ p.classList.remove('active'); }
+    const b=el(`rtab-${t}`); if(b) b.classList.remove('active');
+  });
+  const pane=el(`rpane-${tab}`); if(pane) pane.classList.add('active');
+  if(el_) el_.classList.add('active');
+  if(tab==='decisions') renderDecisions();
+  else if(tab==='vehicles') renderVehicles();
+}
+
+function switchBTab(tab, el_){
+  ['timeline','alert','whatchanged'].forEach(t=>{
+    const p=el(`${t}-pane`); if(p) p.classList.remove('active');
+  });
+  document.querySelectorAll('.rb-tab-bar .tab').forEach(t=>t.classList.remove('active'));
+  const pane=el(`${tab}-pane`); if(pane) pane.classList.add('active');
+  if(el_) el_.classList.add('active');
+  if(tab==='whatchanged') renderWhatChanged();
+  else if(tab==='timeline') renderTimeline();
+}
+
+// ── WebSocket (augment with backend data) ─────────────────────────────
+let ws=null;
+function connectWS(){
+  try{
+    ws = new WebSocket(`ws://${location.host}/ws`);
+    ws.onmessage = e => {
+      try{
+        const msg = JSON.parse(e.data.replace(/: NaN/g,': null').replace(/:NaN/g,':null').replace(/: Infinity/g,': null'));
+        if(msg.type==='state' && msg.payload){
+          const p = msg.payload;
+          // Merge agent events from backend into our log
+          if(p.incidents && p.incidents.length){
+            const newest = p.incidents[0];
+            if(newest && newest.description && !SIM.events.find(ev=>ev.desc===newest.description)){
+              SIM.events.unshift({agent:newest.agent||'System',desc:newest.description,time:simTimeStr()});
+              if(SIM.events.length>80) SIM.events.pop();
+            }
+          }
+        }
+      } catch(err){}
+    };
+    ws.onclose = ()=>setTimeout(connectWS, 3000);
+    const ping = setInterval(()=>{ if(ws&&ws.readyState===1) ws.send('ping'); else clearInterval(ping); }, 10000);
+  } catch(e){}
+}
+
+// ── Utilities ────────────────────────────────────────────────────────
+function el(id){ return document.getElementById(id); }
+function fmtNum(n){ return (n||0).toLocaleString(); }
+function escHtml(s){ if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showNotif(msg, type='alert'){
+  const n=el('notification'); if(!n) return;
+  n.textContent=msg; n.className=type==='info'?'info':type==='success'?'success':'';
+  n.style.display='block'; clearTimeout(n._t);
+  n._t=setTimeout(()=>n.style.display='none', 4500);
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  initZones();
+  initMap();
+  spawnInitialVehicles();
+  renderAll();
+  renderAgentSummary();
+  renderDecisions();
+  connectWS();
+  // Render charts periodically even when not running (animate map)
+  setInterval(()=>{
+    if(!SIM.running) return;
+    renderCharts();
+  }, 500);
+  // Agent summary refresh
+  setInterval(renderAgentSummary, 2000);
+  // Persist sim clock display always
+  setInterval(()=>{ if(SIM.running&&!SIM.paused){ el('hdr-time').textContent=simTimeStr(); }}, 200);
+  // Initial timeline entries
+  addTimeline('🟡 System initialised — awaiting start');
+  addDecision('COORDINATOR','⏳ System ready. Click START or DEMO to begin Chennai flood simulation.');
+});
+</script>
+</body>
+</html>

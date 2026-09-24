@@ -1,0 +1,53 @@
+station_id,station_name,zone_id,latitude,longitude,officers,vehicles,availability
+PS-001,Flower Bazaar,Z01,13.11653,80.271145,117,19,Available
+PS-002,Elephant Gate,Z02,13.058544,80.244069,68,14,Available
+PS-003,Seven Wells,Z03,13.050401,80.257616,70,14,High Demand
+PS-004,Govt Hospital,Z04,12.96479,80.229347,81,15,Available
+PS-005,Esplanade,Z05,13.04282,80.206548,102,13,Available
+PS-006,High Court,Z01,13.133212,80.298577,44,9,Available
+PS-007,Harbour,Z02,13.062088,80.259949,111,20,Available
+PS-008,North Beach,Z03,13.000445,80.246979,47,6,Available
+PS-009,Fort,Z04,12.986996,80.199685,63,10,Available
+PS-010,Muthialpet,Z05,13.039018,80.184705,71,15,Available
+PS-011,Kothavalchavadi,Z01,13.112311,80.276559,62,11,High Demand
+PS-012,Port Marine,Z02,13.049994,80.269229,84,14,Partially Deployed
+PS-013,Washermenpet,Z03,13.016204,80.248203,44,6,Partially Deployed
+PS-014,Tondiarpet,Z04,13.000208,80.222604,47,9,Partially Deployed
+PS-015,Korukkupet,Z05,12.998993,80.195881,102,13,Partially Deployed
+PS-016,R.K. Nagar,Z01,13.130086,80.29797,113,11,Partially Deployed
+PS-017,Stanley Hospital,Z02,13.034524,80.283607,99,13,Partially Deployed
+PS-018,Thiruvottiyur,Z03,13.016675,80.258858,56,5,Available
+PS-019,Royapuram,Z04,13.002245,80.237012,95,14,Available
+PS-020,Kasimedu,Z05,13.023586,80.185419,67,7,Available
+PS-021,Fishing Harbour,Z01,13.109429,80.297531,91,14,Available
+PS-022,Madhavaram,Z02,13.078022,80.282935,111,15,Available
+PS-023,Milk Colony,Z03,13.00687,80.265363,40,5,Partially Deployed
+PS-024,Kilpauk,Z04,12.991431,80.22927,76,7,Partially Deployed
+PS-025,Chetpet,Z05,13.022316,80.190517,49,8,Partially Deployed
+PS-026,Vepery,Z01,13.133091,80.26855,88,13,High Demand
+PS-027,Periamet,Z02,13.074216,80.29635,78,12,Available
+PS-028,Ayanavaram,Z03,13.002803,80.236387,40,5,Partially Deployed
+PS-029,ICF,Z04,12.983375,80.22364,45,5,Available
+PS-030,Triplicane,Z05,12.997817,80.158576,66,12,Available
+PS-031,Annasalai,Z01,13.112257,80.254307,43,9,High Demand
+PS-032,Zam Bazaar,Z02,13.069384,80.247099,101,10,Available
+PS-033,Anna Square,Z03,12.991937,80.275304,118,24,Available
+PS-034,Egmore,Z04,12.970101,80.208246,79,15,Available
+PS-035,Nungambakkam,Z05,13.020229,80.189995,47,6,Available
+PS-036,Thousand Lights,Z01,13.121859,80.308547,109,20,Available
+PS-037,Choolaimedu,Z02,13.080725,80.295341,91,14,Partially Deployed
+PS-038,Mylapore,Z03,13.00094,80.245233,82,14,Available
+PS-039,Foreshore Estate,Z04,12.989129,80.202885,38,7,Available
+PS-040,Marina,Z05,13.021418,80.20377,69,11,High Demand
+PS-041,Abiramapuram,Z01,13.123826,80.275226,103,12,Available
+PS-042,Kotturpuram,Z02,13.078376,80.261906,75,14,Available
+PS-043,Royapettah,Z03,13.029883,80.252667,42,4,Available
+PS-044,Ice House,Z04,12.975096,80.209449,97,16,Available
+PS-045,St. Thomas Mount,Z05,13.017092,80.187837,46,8,Available
+PS-046,Airport,Z01,13.111177,80.274223,91,11,Available
+PS-047,Meenambakkam,Z02,13.072147,80.268081,104,10,High Demand
+PS-048,Pallavaram,Z03,13.00709,80.236914,89,16,Partially Deployed
+PS-049,Madipakkam,Z04,12.962993,80.225867,43,8,Partially Deployed
+PS-050,Adambakkam,Z05,13.030053,80.161034,69,13,Partially Deployed
+PS-051,Pallikaranai,Z01,13.114779,80.300947,68,12,Available
+PS-052,Adyar,Z02,13.072669,80.281083,101,14,Available
