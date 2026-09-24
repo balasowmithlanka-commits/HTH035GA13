@@ -1,7 +1,0 @@
-helicopter_id,base,zone_id,latitude,longitude,capacity,rescue_capability,availability,response_time_min
-HELI-01,Chennai Airport,Z01,13.125777,80.28963,10,Search & rescue,Standby,29
-HELI-02,INS Adyar area,Z02,13.075244,80.269462,6,Winch rescue,Available,25
-HELI-03,Coastal Response Base,Z03,12.98995,80.235538,10,Multi-role,Available,26
-HELI-04,Central Emergency Base,Z04,12.975841,80.238869,12,Medical evacuation,Available,29
-HELI-05,Chennai Airport,Z05,13.026756,80.179401,10,Medical evacuation,Available,22
-HELI-06,INS Adyar area,Z01,13.117964,80.269405,8,Multi-role,Available,14
