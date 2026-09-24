@@ -1,0 +1,15 @@
+file,construction,classification
+01_chennai_rainfall_source.csv,Original uploaded Chennai rainfall data,Source
+02_chennai_roads_source.csv,All uploaded road records whose city is Chennai,Source-filtered
+03_healthcare_source.csv,Original uploaded healthcare data,Source
+04_chennai_census_source.csv,Chennai census record from uploaded census file,Source
+05_chennai_500_zone_cells.csv,500 operational spatial cells; population allocated from Chennai census baseline; flood variables derived from rainfall,Derived + scenario
+06_chennai_1500_road_links.csv,Connected road links using Chennai road coordinates/characteristics and flood-state simulation,Derived + scenario
+07_chennai_150_shelters.csv,Scenario evacuation shelters with bounded capacity/occupancy,Scenario
+08_chennai_200_ambulances.csv,Constrained ambulance fleet,Scenario
+09_chennai_120_rescue_vehicles.csv,Constrained rescue fleet,Scenario
+10_chennai_150_medical_teams.csv,Medical response teams,Scenario
+11_chennai_500_resources.csv,Food/water/medicine/relief stocks,Scenario
+12_chennai_10000_patients.csv,Synthetic flood-triage demand calibrated to healthcare distributions,Derived + scenario
+13_chennai_3000_incidents.csv,Synthetic emergency incidents,Scenario
+14_chennai_20000_event_stream.csv,Simulation/event stream for agents,Derived + scenario

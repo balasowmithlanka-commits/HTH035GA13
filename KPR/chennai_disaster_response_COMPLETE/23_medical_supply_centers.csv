@@ -1,0 +1,61 @@
+supply_center_id,name,zone_id,latitude,longitude,item_type,stock_quantity,status
+MED-001,Medical Supply Centre 001,Z01,13.130583,80.262742,ORS,6294,Available
+MED-002,Medical Supply Centre 002,Z02,13.059556,80.282818,Bandages,8036,Available
+MED-003,Medical Supply Centre 003,Z03,13.029937,80.251863,IV Fluids,10755,Available
+MED-004,Medical Supply Centre 004,Z04,12.960523,80.208489,First Aid Kit,10053,Available
+MED-005,Medical Supply Centre 005,Z05,13.011549,80.19309,First Aid Kit,9041,Available
+MED-006,Medical Supply Centre 006,Z01,13.106882,80.258937,Bandages,898,Reserved
+MED-007,Medical Supply Centre 007,Z02,13.0678,80.262866,First Aid Kit,5070,Available
+MED-008,Medical Supply Centre 008,Z03,13.011646,80.251346,PPE,8085,Reserved
+MED-009,Medical Supply Centre 009,Z04,12.983891,80.245282,First Aid Kit,2715,Available
+MED-010,Medical Supply Centre 010,Z05,13.012742,80.191527,PPE,7273,Low Stock
+MED-011,Medical Supply Centre 011,Z01,13.116855,80.289661,First Aid Kit,4890,Reserved
+MED-012,Medical Supply Centre 012,Z02,13.0776,80.264188,ORS,11331,Available
+MED-013,Medical Supply Centre 013,Z03,13.012142,80.264607,IV Fluids,8923,Reserved
+MED-014,Medical Supply Centre 014,Z04,12.980589,80.221145,Bandages,8471,Available
+MED-015,Medical Supply Centre 015,Z05,13.038841,80.188265,Antibiotics,6590,Available
+MED-016,Medical Supply Centre 016,Z01,13.113143,80.28509,ORS,9027,Reserved
+MED-017,Medical Supply Centre 017,Z02,13.068138,80.278378,IV Fluids,10323,Low Stock
+MED-018,Medical Supply Centre 018,Z03,13.000123,80.241766,ORS,4300,Available
+MED-019,Medical Supply Centre 019,Z04,12.962139,80.208557,PPE,9115,Available
+MED-020,Medical Supply Centre 020,Z05,13.008809,80.173688,Antibiotics,11127,Reserved
+MED-021,Medical Supply Centre 021,Z01,13.100971,80.280987,ORS,4461,Available
+MED-022,Medical Supply Centre 022,Z02,13.088243,80.282579,ORS,4183,Available
+MED-023,Medical Supply Centre 023,Z03,12.984805,80.263915,Bandages,1927,Available
+MED-024,Medical Supply Centre 024,Z04,12.968911,80.212079,PPE,8104,Low Stock
+MED-025,Medical Supply Centre 025,Z05,13.011624,80.160601,Antibiotics,347,Reserved
+MED-026,Medical Supply Centre 026,Z01,13.114827,80.315466,Bandages,9109,Available
+MED-027,Medical Supply Centre 027,Z02,13.060651,80.279106,Antibiotics,1397,Low Stock
+MED-028,Medical Supply Centre 028,Z03,12.999083,80.240419,Antibiotics,6307,Available
+MED-029,Medical Supply Centre 029,Z04,12.997595,80.204234,PPE,4802,Available
+MED-030,Medical Supply Centre 030,Z05,13.034278,80.196764,Bandages,11333,Available
+MED-031,Medical Supply Centre 031,Z01,13.125179,80.277834,First Aid Kit,3406,Low Stock
+MED-032,Medical Supply Centre 032,Z02,13.068779,80.27216,PPE,3155,Available
+MED-033,Medical Supply Centre 033,Z03,13.015196,80.258555,IV Fluids,258,Available
+MED-034,Medical Supply Centre 034,Z04,12.978349,80.220986,Bandages,2838,Available
+MED-035,Medical Supply Centre 035,Z05,13.013152,80.178403,PPE,9853,Available
+MED-036,Medical Supply Centre 036,Z01,13.118876,80.269214,IV Fluids,3956,Available
+MED-037,Medical Supply Centre 037,Z02,13.07393,80.256486,First Aid Kit,8001,Available
+MED-038,Medical Supply Centre 038,Z03,13.008312,80.252008,Bandages,9150,Available
+MED-039,Medical Supply Centre 039,Z04,13.006432,80.202315,PPE,6145,Available
+MED-040,Medical Supply Centre 040,Z05,13.023021,80.184767,Bandages,5756,Low Stock
+MED-041,Medical Supply Centre 041,Z01,13.130293,80.273272,Antibiotics,5695,Available
+MED-042,Medical Supply Centre 042,Z02,13.053578,80.301743,First Aid Kit,675,Available
+MED-043,Medical Supply Centre 043,Z03,13.024202,80.232863,Antibiotics,2637,Low Stock
+MED-044,Medical Supply Centre 044,Z04,12.995092,80.225857,ORS,3903,Reserved
+MED-045,Medical Supply Centre 045,Z05,13.004203,80.196422,ORS,11343,Available
+MED-046,Medical Supply Centre 046,Z01,13.110766,80.284638,PPE,7811,Available
+MED-047,Medical Supply Centre 047,Z02,13.086524,80.258507,IV Fluids,368,Available
+MED-048,Medical Supply Centre 048,Z03,12.981061,80.253447,Antibiotics,4286,Available
+MED-049,Medical Supply Centre 049,Z04,12.978693,80.188163,ORS,6061,Available
+MED-050,Medical Supply Centre 050,Z05,13.020786,80.176006,PPE,7032,Available
+MED-051,Medical Supply Centre 051,Z01,13.129259,80.294471,PPE,4673,Available
+MED-052,Medical Supply Centre 052,Z02,13.089434,80.279535,Bandages,7216,Low Stock
+MED-053,Medical Supply Centre 053,Z03,12.999307,80.270892,First Aid Kit,9598,Available
+MED-054,Medical Supply Centre 054,Z04,12.981314,80.226287,ORS,6760,Available
+MED-055,Medical Supply Centre 055,Z05,13.010438,80.178952,Bandages,4357,Available
+MED-056,Medical Supply Centre 056,Z01,13.119804,80.294094,Antibiotics,5393,Available
+MED-057,Medical Supply Centre 057,Z02,13.075311,80.272632,First Aid Kit,10349,Low Stock
+MED-058,Medical Supply Centre 058,Z03,13.017533,80.258463,PPE,10935,Low Stock
+MED-059,Medical Supply Centre 059,Z04,12.984739,80.240326,PPE,5208,Available
+MED-060,Medical Supply Centre 060,Z05,13.012427,80.190922,ORS,11809,Available

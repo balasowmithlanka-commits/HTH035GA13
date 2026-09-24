@@ -1,0 +1,7 @@
+helipad_id,location_name,zone_id,latitude,longitude,status,slots,helicopter_class
+HP-01,Chennai Airport area,Z01,13.103288,80.290546,Operational,2,Medium Helicopter
+HP-02,INS Adyar area,Z02,13.065934,80.271113,Operational,2,Large Helicopter
+HP-03,Island Grounds,Z03,13.005483,80.279037,Operational,2,Large Helicopter
+HP-04,Rajiv Gandhi Government General Hospital area,Z04,12.974665,80.190926,Operational,1,Medium Helicopter
+HP-05,St Thomas Mount area,Z05,13.026411,80.19786,Operational,2,Large Helicopter
+HP-06,Coastal Emergency Staging Area,Z01,13.10676,80.280679,Operational,1,Medium Helicopter

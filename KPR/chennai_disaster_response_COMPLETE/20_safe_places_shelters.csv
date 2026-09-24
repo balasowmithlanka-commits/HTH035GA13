@@ -1,0 +1,101 @@
+safe_place_id,name,zone_id,latitude,longitude,capacity,occupancy,available_slots,facility_type
+SAFE-001,Emergency Safe Centre 001,Z01,13.099555,80.281029,1068,660,470,Corporation Facility
+SAFE-002,Emergency Safe Centre 002,Z02,13.062951,80.275644,1228,488,892,Shelter
+SAFE-003,Emergency Safe Centre 003,Z03,12.994769,80.244107,1454,458,1075,Corporation Facility
+SAFE-004,Emergency Safe Centre 004,Z04,12.977185,80.212569,501,247,366,Corporation Facility
+SAFE-005,Emergency Safe Centre 005,Z05,13.02119,80.180332,1205,795,757,Community Hall
+SAFE-006,Emergency Safe Centre 006,Z01,13.119796,80.275455,1253,368,382,Corporation Facility
+SAFE-007,Emergency Safe Centre 007,Z02,13.055614,80.278116,1706,768,737,Corporation Facility
+SAFE-008,Emergency Safe Centre 008,Z03,13.002855,80.261479,1062,311,581,Community Hall
+SAFE-009,Emergency Safe Centre 009,Z04,12.984181,80.219083,910,257,322,School
+SAFE-010,Emergency Safe Centre 010,Z05,13.011486,80.167262,1272,856,742,School
+SAFE-011,Emergency Safe Centre 011,Z01,13.111673,80.278632,904,423,680,Community Hall
+SAFE-012,Emergency Safe Centre 012,Z02,13.089898,80.253854,977,267,667,Shelter
+SAFE-013,Emergency Safe Centre 013,Z03,13.00195,80.244925,1046,690,700,Corporation Facility
+SAFE-014,Emergency Safe Centre 014,Z04,12.969958,80.213724,1641,1115,1270,Community Hall
+SAFE-015,Emergency Safe Centre 015,Z05,13.010215,80.177468,542,121,409,Community Hall
+SAFE-016,Emergency Safe Centre 016,Z01,13.125331,80.283968,545,370,401,Community Hall
+SAFE-017,Emergency Safe Centre 017,Z02,13.091759,80.24218,1639,765,940,Community Hall
+SAFE-018,Emergency Safe Centre 018,Z03,13.0217,80.238625,252,172,150,Corporation Facility
+SAFE-019,Emergency Safe Centre 019,Z04,12.965594,80.219308,299,145,176,Community Hall
+SAFE-020,Emergency Safe Centre 020,Z05,13.024551,80.16981,573,191,185,Corporation Facility
+SAFE-021,Emergency Safe Centre 021,Z01,13.143556,80.272345,1598,683,544,Corporation Facility
+SAFE-022,Emergency Safe Centre 022,Z02,13.067177,80.270059,890,243,613,Corporation Facility
+SAFE-023,Emergency Safe Centre 023,Z03,12.998001,80.286328,980,314,497,Corporation Facility
+SAFE-024,Emergency Safe Centre 024,Z04,12.986462,80.226455,730,432,430,Community Hall
+SAFE-025,Emergency Safe Centre 025,Z05,13.044669,80.169022,1686,1044,1286,Corporation Facility
+SAFE-026,Emergency Safe Centre 026,Z01,13.103858,80.285245,372,75,265,Community Hall
+SAFE-027,Emergency Safe Centre 027,Z02,13.081923,80.287272,1683,1138,815,Community Hall
+SAFE-028,Emergency Safe Centre 028,Z03,13.00615,80.263832,517,157,227,Shelter
+SAFE-029,Emergency Safe Centre 029,Z04,12.961849,80.202411,664,275,514,Corporation Facility
+SAFE-030,Emergency Safe Centre 030,Z05,13.001543,80.177489,1347,672,563,Community Hall
+SAFE-031,Emergency Safe Centre 031,Z01,13.123262,80.286055,579,130,355,School
+SAFE-032,Emergency Safe Centre 032,Z02,13.085778,80.267001,498,122,372,Corporation Facility
+SAFE-033,Emergency Safe Centre 033,Z03,13.019338,80.246202,1554,1003,1138,School
+SAFE-034,Emergency Safe Centre 034,Z04,12.979234,80.209442,1037,594,732,School
+SAFE-035,Emergency Safe Centre 035,Z05,13.024407,80.167956,1161,659,408,Corporation Facility
+SAFE-036,Emergency Safe Centre 036,Z01,13.120575,80.299822,1631,620,721,School
+SAFE-037,Emergency Safe Centre 037,Z02,13.102809,80.27028,1285,899,485,Corporation Facility
+SAFE-038,Emergency Safe Centre 038,Z03,13.001157,80.230709,1765,1005,569,School
+SAFE-039,Emergency Safe Centre 039,Z04,12.984519,80.217982,1517,458,840,Community Hall
+SAFE-040,Emergency Safe Centre 040,Z05,13.012964,80.192281,1559,323,1082,Shelter
+SAFE-041,Emergency Safe Centre 041,Z01,13.102048,80.272097,1195,833,875,Community Hall
+SAFE-042,Emergency Safe Centre 042,Z02,13.063438,80.284379,758,426,470,Community Hall
+SAFE-043,Emergency Safe Centre 043,Z03,13.023411,80.268846,1672,395,635,School
+SAFE-044,Emergency Safe Centre 044,Z04,12.975622,80.189052,310,188,134,Shelter
+SAFE-045,Emergency Safe Centre 045,Z05,13.02749,80.167568,1767,1110,885,School
+SAFE-046,Emergency Safe Centre 046,Z01,13.131799,80.301604,1019,370,460,School
+SAFE-047,Emergency Safe Centre 047,Z02,13.073366,80.270351,705,196,232,Community Hall
+SAFE-048,Emergency Safe Centre 048,Z03,12.99153,80.263552,626,134,424,Corporation Facility
+SAFE-049,Emergency Safe Centre 049,Z04,12.994154,80.24956,758,155,308,School
+SAFE-050,Emergency Safe Centre 050,Z05,13.038114,80.192703,1355,936,428,School
+SAFE-051,Emergency Safe Centre 051,Z01,13.124912,80.282672,1466,690,957,School
+SAFE-052,Emergency Safe Centre 052,Z02,13.090072,80.29564,1229,434,476,School
+SAFE-053,Emergency Safe Centre 053,Z03,13.017901,80.306225,1530,789,546,School
+SAFE-054,Emergency Safe Centre 054,Z04,12.974186,80.198038,702,404,481,Community Hall
+SAFE-055,Emergency Safe Centre 055,Z05,13.011356,80.157218,309,191,143,Corporation Facility
+SAFE-056,Emergency Safe Centre 056,Z01,13.113668,80.280638,513,148,183,Community Hall
+SAFE-057,Emergency Safe Centre 057,Z02,13.047482,80.275667,934,462,649,Shelter
+SAFE-058,Emergency Safe Centre 058,Z03,13.029327,80.254777,423,286,138,Community Hall
+SAFE-059,Emergency Safe Centre 059,Z04,13.005023,80.216337,1328,655,599,Shelter
+SAFE-060,Emergency Safe Centre 060,Z05,12.997144,80.161933,653,309,254,School
+SAFE-061,Emergency Safe Centre 061,Z01,13.108114,80.30338,1492,420,941,Community Hall
+SAFE-062,Emergency Safe Centre 062,Z02,13.058145,80.265824,437,278,333,School
+SAFE-063,Emergency Safe Centre 063,Z03,13.008088,80.252683,902,443,564,Corporation Facility
+SAFE-064,Emergency Safe Centre 064,Z04,12.97996,80.223843,1658,936,1240,School
+SAFE-065,Emergency Safe Centre 065,Z05,13.032614,80.186819,1155,389,686,School
+SAFE-066,Emergency Safe Centre 066,Z01,13.095873,80.275564,801,449,625,Shelter
+SAFE-067,Emergency Safe Centre 067,Z02,13.070171,80.253611,816,342,378,Shelter
+SAFE-068,Emergency Safe Centre 068,Z03,13.000578,80.237706,1057,305,477,Shelter
+SAFE-069,Emergency Safe Centre 069,Z04,12.997393,80.207097,521,316,344,School
+SAFE-070,Emergency Safe Centre 070,Z05,13.035227,80.190176,1750,607,1275,Shelter
+SAFE-071,Emergency Safe Centre 071,Z01,13.104291,80.282125,1182,635,507,School
+SAFE-072,Emergency Safe Centre 072,Z02,13.045507,80.272935,1191,381,823,Shelter
+SAFE-073,Emergency Safe Centre 073,Z03,12.992797,80.277549,1365,556,482,School
+SAFE-074,Emergency Safe Centre 074,Z04,12.987322,80.210679,1734,682,1344,Community Hall
+SAFE-075,Emergency Safe Centre 075,Z05,13.027907,80.176129,1586,727,1263,School
+SAFE-076,Emergency Safe Centre 076,Z01,13.11753,80.281422,1654,391,724,School
+SAFE-077,Emergency Safe Centre 077,Z02,13.06638,80.253211,1582,1067,778,Community Hall
+SAFE-078,Emergency Safe Centre 078,Z03,13.026007,80.243865,854,411,580,Community Hall
+SAFE-079,Emergency Safe Centre 079,Z04,13.000368,80.208799,653,319,306,Community Hall
+SAFE-080,Emergency Safe Centre 080,Z05,13.036729,80.153708,1042,361,793,School
+SAFE-081,Emergency Safe Centre 081,Z01,13.128917,80.266691,1173,340,719,Corporation Facility
+SAFE-082,Emergency Safe Centre 082,Z02,13.078505,80.29554,1464,915,1022,Community Hall
+SAFE-083,Emergency Safe Centre 083,Z03,13.008449,80.259314,990,482,616,School
+SAFE-084,Emergency Safe Centre 084,Z04,13.009293,80.243732,1402,718,627,School
+SAFE-085,Emergency Safe Centre 085,Z05,13.018801,80.165942,1286,662,777,Corporation Facility
+SAFE-086,Emergency Safe Centre 086,Z01,13.09269,80.286973,1741,603,1384,Corporation Facility
+SAFE-087,Emergency Safe Centre 087,Z02,13.075808,80.235215,530,128,353,Corporation Facility
+SAFE-088,Emergency Safe Centre 088,Z03,13.017854,80.253869,1460,395,710,Community Hall
+SAFE-089,Emergency Safe Centre 089,Z04,12.974599,80.226882,443,140,300,Corporation Facility
+SAFE-090,Emergency Safe Centre 090,Z05,13.031134,80.179957,361,131,187,School
+SAFE-091,Emergency Safe Centre 091,Z01,13.11161,80.308731,1261,720,643,Shelter
+SAFE-092,Emergency Safe Centre 092,Z02,13.056995,80.271072,1417,651,428,School
+SAFE-093,Emergency Safe Centre 093,Z03,13.01662,80.24927,639,379,419,Corporation Facility
+SAFE-094,Emergency Safe Centre 094,Z04,12.992603,80.231437,269,85,110,Community Hall
+SAFE-095,Emergency Safe Centre 095,Z05,13.01859,80.180781,1476,574,937,Corporation Facility
+SAFE-096,Emergency Safe Centre 096,Z01,13.121367,80.286555,260,78,148,School
+SAFE-097,Emergency Safe Centre 097,Z02,13.060203,80.278611,1547,590,571,School
+SAFE-098,Emergency Safe Centre 098,Z03,13.000068,80.266045,729,455,249,Shelter
+SAFE-099,Emergency Safe Centre 099,Z04,12.990902,80.20228,1104,611,843,Corporation Facility
+SAFE-100,Emergency Safe Centre 100,Z05,13.006799,80.18649,1194,528,643,Community Hall

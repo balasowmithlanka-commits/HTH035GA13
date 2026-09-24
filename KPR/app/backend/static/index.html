@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chennai Flood Emergency — Multi-Agent Response Coordinator</title>
+<meta name="description" content="Real-time multi-agent disaster response coordination for Chennai flood emergency. Simulation only — not official government data."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── Reset & tokens ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Deep navy base — tighter contrast */
+  --bg:#040b16;--bg2:#070f1c;--bg3:#0b1624;--bg4:#0f1e30;--bg5:#142438;
+  --border:#122030;--border2:#1c3048;--border3:#263d58;
+  /* Text scale */
+  --text:#dce8f5;--text2:#7b9ab8;--text3:#3d5a78;--text-dim:#2a3f55;
+  /* Severity */
+  --critical:#ef4444;--critical-glow:rgba(239,68,68,.35);--critical-bg:rgba(239,68,68,.1);--critical-border:rgba(239,68,68,.28);
+  --high:#f97316;--high-bg:rgba(249,115,22,.1);--high-border:rgba(249,115,22,.28);
+  --medium:#eab308;--medium-bg:rgba(234,179,8,.1);--medium-border:rgba(234,179,8,.28);
+  --low:#22c55e;--low-bg:rgba(34,197,94,.1);--low-border:rgba(34,197,94,.28);
+  /* Accent */
+  --accent:#2563eb;--accent-light:#3b82f6;--accent-bright:#60a5fa;--accent2:#1d4ed8;
+  /* Misc */
+  --green:#22c55e;--yellow:#eab308;--red:#ef4444;--orange:#f97316;--cyan:#06b6d4;--purple:#8b5cf6;
+  --radius:6px;--radius2:10px;--radius3:4px;
+  --t-fast:120ms ease;--t-base:200ms ease;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);font-size:12px;line-height:1.4;-webkit-font-smoothing:antialiased}
+
+/* ── Layout ── */
+#app{display:grid;height:100vh;grid-template-rows:44px 1fr;grid-template-columns:1fr;overflow:hidden}
+#header{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:200;flex-shrink:0}
+#main-content{display:grid;grid-template-columns:268px 1fr 280px;grid-template-rows:1fr 215px;overflow:hidden;gap:0}
+
+/* ── Header ── */
+.header-logo{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.3px;white-space:nowrap}
+.header-logo-badge{background:linear-gradient(135deg,#1e3a8a,var(--accent));color:#fff;font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;letter-spacing:.8px}
+.header-logo span{color:var(--critical)}
+.header-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;background:rgba(239,68,68,.12);color:var(--critical);border:1px solid var(--critical-border);letter-spacing:.6px}
+.header-sim-time{font-family:var(--mono);font-size:14px;color:var(--accent-bright);font-weight:600;letter-spacing:.8px}
+.header-status{display:flex;align-items:center;gap:7px;padding:3px 10px;border-radius:5px;border:1px solid var(--border);background:var(--bg3);font-size:10px;color:var(--text2)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background var(--t-base)}
+.status-dot.running{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 1.4s ease-in-out infinite}
+.status-dot.paused{background:var(--yellow)}
+.header-controls{display:flex;gap:5px;align-items:center;margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;border:1px solid var(--border3);background:var(--bg4);color:var(--text);font-size:10px;font-weight:600;cursor:pointer;transition:all var(--t-fast);font-family:var(--font);white-space:nowrap;letter-spacing:.2px}
+.btn:hover{background:var(--bg5);border-color:var(--accent-light);color:var(--accent-bright)}.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);border-color:rgba(37,99,235,.5);color:#fff}.btn.primary:hover{background:var(--accent2);color:#fff}
+.btn.danger{background:var(--critical-bg);border-color:var(--critical-border);color:var(--critical)}.btn.danger:hover{background:rgba(239,68,68,.18);color:var(--red)}
+.btn.demo{background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#a78bfa;font-weight:700}.btn.demo:hover{background:rgba(139,92,246,.22);color:#c4b5fd}
+.btn.plan-btn{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3);color:var(--cyan)}.btn.plan-btn:hover{background:rgba(6,182,212,.2)}
+.speed-select{padding:3px 7px;border-radius:5px;border:1px solid var(--border3);background:var(--bg4);color:var(--text2);font-size:10px;cursor:pointer;font-family:var(--font)}
+
+/* ── Panels ── */
+.panel{background:var(--bg2);border-right:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+.panel.right{border-right:none;border-left:1px solid var(--border)}
+.panel-header{padding:7px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;flex-shrink:0;background:var(--bg3)}
+.panel-title{font-size:9px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase}
+.panel-count{font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--radius3);background:var(--bg5);color:var(--text2)}
+.panel-count.critical{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+.panel-count.live{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+.panel-body{overflow-y:auto;flex:1;padding:7px}
+.panel-body::-webkit-scrollbar{width:3px}
+.panel-body::-webkit-scrollbar-track{background:transparent}
+.panel-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── Map ── */
+#map-container{position:relative;overflow:hidden}
+#map{width:100%;height:100%}
+.leaflet-container{background:#060e1d}
+.map-overlay{position:absolute;bottom:8px;left:8px;z-index:1000;display:flex;flex-direction:column;gap:4px}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text2);background:rgba(8,14,28,.85);padding:3px 7px;border-radius:4px;backdrop-filter:blur(4px)}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ── Zone cards ── */
+.zone-card{border-radius:var(--radius);border:1px solid var(--border);background:var(--bg3);padding:8px 10px;margin-bottom:5px;cursor:pointer;transition:all var(--t-fast);position:relative;overflow:hidden}
+.zone-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.zone-card.CRITICAL::before{background:var(--critical)}.zone-card.HIGH::before{background:var(--high)}
+.zone-card.MEDIUM::before{background:var(--medium)}.zone-card.LOW::before{background:var(--low)}
+.zone-card:hover{border-color:var(--border3);background:var(--bg4)}
+.zone-card.selected{border-color:var(--accent-light);background:var(--bg5)}
+.zone-card.new-zone{border-color:var(--critical-border);box-shadow:0 0 10px var(--critical-glow);animation:newZonePulse 1.5s ease-in-out 4}
+.zone-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;padding-left:6px}
+.zone-name{font-size:11px;font-weight:700;color:var(--text)}
+.zone-new-tag{font-size:8px;font-weight:700;color:var(--critical);margin-left:4px;letter-spacing:.3px}
+.zone-badge{font-size:8px;font-weight:700;padding:2px 6px;border-radius:var(--radius3);letter-spacing:.5px;flex-shrink:0}
+.zone-badge.CRITICAL{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+.zone-badge.HIGH{background:var(--high-bg);color:var(--high);border:1px solid var(--high-border)}
+.zone-badge.MEDIUM{background:var(--medium-bg);color:var(--medium);border:1px solid var(--medium-border)}
+.zone-badge.LOW{background:var(--low-bg);color:var(--low);border:1px solid var(--low-border)}
+.zone-stats{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;padding-left:6px}
+.zone-stat{display:flex;justify-content:space-between;align-items:center;font-size:10px}
+.zone-stat-label{color:var(--text3);font-size:9px}
+.zone-stat-value{color:var(--text2);font-weight:600;font-family:var(--mono);font-size:10px}
+.zone-stat-value.crit{color:var(--critical)}
+.flood-bar{height:2px;border-radius:1px;background:var(--border);margin-top:6px;margin-left:6px;overflow:hidden}
+.flood-fill{height:100%;border-radius:1px;transition:width .6s ease}
+
+/* ── Agent panel ── */
+.agent-item{border-radius:var(--radius);border:1px solid var(--border);background:var(--bg3);padding:7px 10px;margin-bottom:4px;transition:all var(--t-base)}
+.agent-item:hover{border-color:var(--border2);background:var(--bg4)}
+.agent-item.active{border-color:var(--accent-light);background:var(--bg5)}
+.agent-header{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.agent-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;transition:all var(--t-base)}
+.agent-dot.Idle{background:var(--text3)}
+.agent-dot.Analyzing,.agent-dot.Calculating{background:var(--accent-bright);box-shadow:0 0 5px var(--accent-bright);animation:blink .9s ease-in-out infinite}
+.agent-dot.Requesting{background:var(--yellow);box-shadow:0 0 5px var(--yellow);animation:blink .7s ease-in-out infinite}
+.agent-dot.Reallocating{background:var(--orange);box-shadow:0 0 5px var(--orange);animation:blink .7s ease-in-out infinite}
+.agent-dot.Resolving{background:var(--red);box-shadow:0 0 5px var(--critical-glow);animation:blink .5s ease-in-out infinite}
+.agent-dot.Updating{background:var(--green);animation:blink 1s ease-in-out infinite}.agent-dot.Ready{background:var(--green)}
+.agent-name{font-size:11px;font-weight:700;color:var(--text)}
+.agent-status-badge{margin-left:auto;font-size:8px;font-weight:700;padding:1px 5px;border-radius:var(--radius3);letter-spacing:.4px;text-transform:uppercase}
+.agent-status-badge.Idle{background:var(--bg5);color:var(--text3)}
+.agent-status-badge.Analyzing,.agent-status-badge.Calculating{background:rgba(37,99,235,.15);color:var(--accent-bright)}
+.agent-status-badge.Requesting{background:rgba(234,179,8,.15);color:var(--yellow)}
+.agent-status-badge.Reallocating{background:rgba(249,115,22,.15);color:var(--orange)}
+.agent-status-badge.Resolving{background:var(--critical-bg);color:var(--critical)}
+.agent-status-badge.Updating,.agent-status-badge.Ready{background:rgba(34,197,94,.12);color:var(--green)}
+.agent-action{font-size:9px;color:var(--text2);line-height:1.5;word-break:break-word}
+
+/* ── Bottom panels ── */
+#bottom-section{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border-top:1px solid var(--border);overflow:hidden}
+.bottom-panel{border-right:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+.bottom-panel:last-child{border-right:none}
+
+/* ── Resource grid ── */
+.resource-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:8px}
+.res-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 10px}
+.res-name{font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.res-bar-row{display:flex;align-items:center;gap:6px}
+.res-nums{font-size:11px;font-weight:700;color:var(--text);font-family:var(--mono);white-space:nowrap}
+.res-bar{flex:1;height:5px;border-radius:3px;background:var(--border);overflow:hidden}
+.res-fill{height:100%;border-radius:3px;transition:width .5s;background:var(--accent)}
+.res-fill.depleted{background:var(--red)}
+.res-fill.warning{background:var(--yellow)}
+
+/* ── Timeline ── */
+.timeline-item{display:flex;gap:8px;padding:5px 8px;border-left:2px solid var(--border);margin-left:6px;margin-bottom:2px;position:relative}
+.timeline-item::before{content:'';position:absolute;left:-5px;top:8px;width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0}
+.timeline-item.critical::before{background:var(--critical)}
+.timeline-item.high::before{background:var(--orange)}
+.timeline-item.system::before{background:var(--accent)}
+.timeline-item.demo::before{background:var(--yellow)}
+.timeline-time{font-size:9px;color:var(--text3);font-family:var(--mono);white-space:nowrap;margin-top:1px}
+.timeline-text{font-size:10px;color:var(--text2);line-height:1.4}
+
+/* ── Plan comparison ── */
+.plan-tab-bar{display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid var(--border)}
+.plan-tab{font-size:10px;font-weight:600;padding:3px 10px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);font-family:var(--font)}
+.plan-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.change-item{display:flex;gap:6px;padding:4px 8px;font-size:10px;color:var(--text2);border-bottom:1px solid rgba(30,45,74,.5)}
+.change-item:last-child{border-bottom:none}
+
+/* ── Alert panel ── */
+.alert-severity{font-size:10px;font-weight:700;letter-spacing:.8px;padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:8px}
+.alert-severity.CRITICAL{background:var(--critical-bg);color:var(--critical);border:1px solid var(--critical-border)}
+.alert-severity.HIGH{background:var(--high-bg);color:var(--high);border:1px solid var(--high-border)}
+.alert-severity.MODERATE{background:var(--medium-bg);color:var(--medium);border:1px solid var(--medium-border)}
+.alert-text{font-size:10px;color:var(--text2);line-height:1.6;font-family:var(--mono);white-space:pre-wrap;word-break:break-word;max-height:80px;overflow-y:auto}
+.alert-channels{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.alert-ch{font-size:9px;font-weight:600;padding:2px 8px;border-radius:3px;background:var(--bg4);color:var(--text3);border:1px solid var(--border);letter-spacing:.3px}
+
+/* ── Event log ── */
+.event-item{padding:5px 8px;border-bottom:1px solid rgba(30,45,74,.4);display:flex;gap:8px;align-items:flex-start}
+.event-agent{font-size:9px;font-weight:700;color:var(--accent);white-space:nowrap;min-width:70px;margin-top:1px}
+.event-body{flex:1;min-width:0}
+.event-type{font-size:10px;font-weight:600;color:var(--text)}
+.event-detail{font-size:9px;color:var(--text3);line-height:1.4;word-break:break-word}
+.event-time{font-size:8px;color:var(--text3);font-family:var(--mono);white-space:nowrap;margin-top:1px}
+
+/* ── Manual event buttons ── */
+.event-btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px}
+.event-btn{padding:5px 8px;border-radius:5px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:9px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;font-family:var(--font)}
+.event-btn:hover{border-color:var(--accent);color:var(--text)}
+.event-btn.special{border-color:rgba(239,68,68,.4);color:var(--red);background:rgba(239,68,68,.08)}
+.event-btn.special:hover{background:rgba(239,68,68,.15)}
+
+/* ── Notification banner ── */
+#notification{position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--critical);color:#fff;padding:10px 24px;border-radius:8px;font-size:12px;font-weight:700;box-shadow:0 4px 20px rgba(239,68,68,.4);display:none;animation:slideDown .3s ease;white-space:nowrap}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:5000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius2);padding:20px;width:420px;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--text)}
+.modal-close{float:right;cursor:pointer;color:var(--text3);font-size:16px;line-height:1}
+.modal-section{margin-bottom:12px}
+.modal-section-title{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.detail-item{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(30,45,74,.4)}
+.detail-label{color:var(--text3)}
+.detail-value{color:var(--text);font-weight:600;font-family:var(--mono)}
+
+/* ── Animations ── */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes glow{0%{opacity:.7}100%{opacity:1}}
+@keyframes newZonePulse{0%,100%{box-shadow:0 0 0 rgba(239,68,68,0)}50%{box-shadow:0 0 14px var(--critical-glow)}}
+@keyframes slideDown{from{transform:translateX(-50%) translateY(-10px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .25s ease}
+
+/* ── Scrollbar ── */
+*{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+
+/* ── Responsive adjustments ── */
+@media(max-width:1100px){
+  #main-content{grid-template-columns:240px 1fr 240px}
+  #bottom-section{grid-template-columns:1fr 1fr}
+}
+
+/* ── Plan section ── */
+.alloc-table{width:100%;border-collapse:collapse;font-size:10px}
+.alloc-table th{text-align:left;padding:4px 6px;color:var(--text3);font-size:9px;letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.alloc-table td{padding:4px 6px;border-bottom:1px solid rgba(30,45,74,.3);color:var(--text2)}
+.alloc-table tr:hover td{background:rgba(22,32,64,.5)}
+
+/* ── Tabs ── */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg3)}
+.tab{padding:6px 11px;font-size:9px;font-weight:700;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;transition:all var(--t-fast);font-family:var(--font);letter-spacing:.5px;text-transform:uppercase}
+.tab.active{color:var(--accent-bright);border-bottom-color:var(--accent-bright)}
+.tab-content{display:none;flex:1;overflow-y:auto}
+.tab-content.active{display:flex;flex-direction:column}
+/* ── Resource grid upgrades ── */
+.res-item.depleted{border-color:var(--critical-border)}
+.res-item.warning{border-color:var(--high-border)}
+/* Notification info variant */
+#notification.info{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 20px rgba(37,99,235,.4)}
+#notification.success{background:linear-gradient(135deg,#15803d,#166534);box-shadow:0 4px 20px rgba(34,197,94,.3)}
+</style>
+</head>
+<body>
+<div id="app">
+<!-- ── Header ── -->
+<header id="header">
+  <div class="header-logo"><div class="header-logo-badge">EOC</div><div>Chennai<span>FLOOD</span></div></div>
+  <div class="header-badge">SIMULATION</div>
+  <div class="header-status">
+    <div class="status-dot" id="sim-dot"></div>
+    <span id="sim-status-text">Idle</span>
+  </div>
+  <div class="header-sim-time" id="sim-time">09:00</div>
+  <div style="color:var(--text3);font-size:10px;border-left:1px solid var(--border);padding-left:10px;margin-left:2px">Rain: <span id="rainfall-val" style="color:var(--cyan);font-family:var(--mono);font-weight:600">--</span> mm/day</div>
+  <div style="color:var(--text3);font-size:10px;padding:3px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;margin-left:2px">Zones: <span id="hdr-zones" style="color:var(--text);font-weight:700">0</span> &nbsp;|&nbsp; Plan: <span id="hdr-plan" style="color:var(--accent-bright);font-weight:700">--</span></div>
+  <div class="header-controls">
+    <select class="speed-select" id="speed-select" onchange="setSpeed(this.value)">
+      <option value="0.5">0.5x</option>
+      <option value="1" selected>1x</option>
+      <option value="2">2x</option>
+      <option value="5">5x</option>
+    </select>
+    <button class="btn primary" onclick="startSim()">&#9654; START</button>
+    <button class="btn" onclick="pauseSim()">&#9646;&#9646; PAUSE</button>
+    <button class="btn" onclick="resumeSim()">&#9654; RESUME</button>
+    <button class="btn plan-btn" onclick="generatePlan()">&#9776; GEN PLAN</button>
+    <button class="btn demo" onclick="startDemo()">&#9654; DEMO</button>
+    <button class="btn danger" onclick="resetSim()">&#8635; RESET</button>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<div id="main-content">
+
+  <!-- LEFT: Affected Zones -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Affected Zones</div>
+      <div class="panel-count" id="zone-count">0 zones</div>
+    </div>
+    <!-- Manual events -->
+    <div style="border-bottom:1px solid var(--border);padding:6px 8px;flex-shrink:0">
+      <div style="font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.6px;margin-bottom:5px">SIMULATION EVENTS</div>
+      <div class="event-btn-grid" style="padding:0;gap:3px">
+        <button class="event-btn" onclick="applyEvent('increase_rainfall')">⛈ +Rainfall</button>
+        <button class="event-btn" onclick="applyEvent('increase_flood_severity')">🌊 +Flood</button>
+        <button class="event-btn" onclick="applyEvent('block_road')">🚧 Block Road</button>
+        <button class="event-btn" onclick="applyEvent('increase_medical_demand')">🏥 +Medical</button>
+        <button class="event-btn" onclick="applyEvent('reduce_ambulances')">🚑 −Ambu</button>
+        <button class="event-btn" onclick="applyEvent('reduce_shelter')">🏠 −Shelter</button>
+        <button class="event-btn" onclick="applyEvent('comm_failure')">📡 CommFail</button>
+        <button class="event-btn" onclick="applyEvent('power_failure')">⚡ PowerFail</button>
+        <button class="event-btn special" style="grid-column:1/-1" onclick="applyEvent('add_perungudi')">🚨 ADD PERUNGUDI ZONE</button>
+      </div>
+    </div>
+    <div class="panel-body" id="zones-list"></div>
+  </div>
+
+  <!-- CENTER: Map -->
+  <div id="map-container">
+    <div id="map"></div>
+    <div class="map-overlay">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--critical)"></div>CRITICAL</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--high)"></div>HIGH</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--medium)"></div>MEDIUM</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--low)"></div>LOW</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ef4444;border-radius:2px;width:14px;height:4px"></div>Blocked Road</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e;border-radius:2px;width:14px;height:4px"></div>Open Route</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;border-radius:50%;width:8px;height:8px"></div>Hospital</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Agents -->
+  <div class="panel right">
+    <div class="panel-header">
+      <div class="panel-title">Multi-Agent Coordination</div>
+      <div class="panel-count" id="agents-active-badge">0 active</div>
+    </div>
+    <div class="panel-body" id="agents-list" style="max-height:215px"></div>
+    <div style="border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="tab-bar">
+        <div class="tab active" id="rtab-events" onclick="switchRightTab('events',this)">Agent Log</div>
+        <div class="tab" id="rtab-rationale" onclick="switchRightTab('rationale',this)">Rationale</div>
+        <div class="tab" id="rtab-decisions" onclick="switchRightTab('decisions',this)">Decisions</div>
+      </div>
+      <div id="right-events" class="tab-content active" style="flex:1;overflow-y:auto">
+        <div id="agent-events-list"></div>
+      </div>
+      <div id="right-rationale" class="tab-content" style="flex:1;overflow-y:auto;padding:8px">
+        <div id="rationale-text" style="font-size:10px;color:var(--text2);line-height:1.6"></div>
+      </div>
+      <div id="right-decisions" class="tab-content" style="flex:1;overflow-y:auto;padding:8px">
+        <div id="decisions-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div id="bottom-section">
+    <!-- Resources -->
+    <div class="bottom-panel">
+      <div class="panel-header"><div class="panel-title">Resource Pool</div><div class="panel-count" id="resource-updated">—</div></div>
+      <div id="resource-grid" class="resource-grid" style="padding:6px;overflow-y:auto;flex:1"></div>
+    </div>
+    <!-- Plan V1/V2 -->
+    <div class="bottom-panel">
+      <div class="panel-header"><div class="panel-title">Response Plan</div><div class="panel-count" id="plan-version-badge">No plan</div></div>
+      <div class="plan-tab-bar" id="plan-tab-bar"></div>
+      <div id="plan-content" style="overflow-y:auto;flex:1;padding:6px"></div>
+    </div>
+    <!-- Timeline -->
+    <div class="bottom-panel">
+      <div class="panel-header"><div class="panel-title">Incident Timeline</div></div>
+      <div style="overflow-y:auto;flex:1" id="timeline-list"></div>
+    </div>
+    <!-- Alert + What Changed -->
+    <div class="bottom-panel">
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchBottomTab('alert',this)">Public Alert</div>
+        <div class="tab" onclick="switchBottomTab('changes',this)">What Changed?</div>
+      </div>
+      <div id="bottom-alert" class="tab-content active" style="padding:8px;flex:1;overflow-y:auto">
+        <div style="font-size:8px;font-weight:700;color:var(--orange);letter-spacing:.4px;margin-bottom:6px;background:rgba(249,115,22,.1);padding:2px 8px;border-radius:3px;border:1px solid rgba(249,115,22,.2);display:inline-block">SIMULATION ONLY &mdash; NOT OFFICIAL</div>
+        <div id="alert-severity-badge"></div>
+        <div id="alert-text-content" style="font-size:10px;color:var(--text3);font-style:italic">No alert yet &mdash; generate a plan first.</div>
+        <div class="alert-channels">
+          <div class="alert-ch">SMS</div>
+          <div class="alert-ch">Public App</div>
+          <div class="alert-ch">Social Media</div>
+          <div class="alert-ch">Radio</div>
+        </div>
+        <button class="btn" style="margin-top:8px;width:100%;font-size:9px;justify-content:center" onclick="sendAlert()">Send Alert (Demo Only)</button>
+      </div>
+      <div id="bottom-changes" class="tab-content" style="overflow-y:auto;flex:1">
+        <div id="changes-list" style="padding:6px"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- Notification -->
+<div id="notification"></div>
+
+<!-- Zone Detail Modal -->
+<div class="modal-overlay" id="zone-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-zone-name">Zone Detail <span class="modal-close" onclick="closeModal()">✕</span></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let state = null;
+let ws = null;
+let selectedZone = null;
+let planVersions = {};
+let currentPlanTab = null;
+let rightTab = 'events';
+let bottomTab = 'alert';
+let map = null;
+let mapLayers = { zones:{}, roads:[], routes:[], hospitals:[], circles:{} };
+let reconnectTimer = null;
+
+// ── WebSocket ──────────────────────────────────────────────────────────────
+function connect() {
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${protocol}//${location.host}/ws`);
+  ws.onmessage = e => {
+    // Ignore plain pong keepalive messages
+    if (e.data === 'pong') return;
+    try {
+      // Replace JSON NaN/Infinity which Python may produce
+      const cleaned = e.data.replace(/:\s*NaN/g, ': null').replace(/:\s*Infinity/g, ': null');
+      const msg = JSON.parse(cleaned);
+      if (msg.type === 'state') {
+        const prev = state;
+        state = msg.payload;
+        render(prev);
+      }
+    } catch(err) {
+      console.warn('WS parse error', err);
+    }
+  };
+  ws.onopen = () => { clearTimeout(reconnectTimer); fetchState(); };
+  ws.onclose = () => { reconnectTimer = setTimeout(connect, 2000); };
+  ws.onerror = () => ws.close();
+  setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 20000);
+}
+
+async function fetchState() {
+  try {
+    const r = await fetch('/api/state');
+    const raw = await r.text();
+    const cleaned = raw.replace(/:\s*NaN/g, ': null').replace(/:\s*Infinity/g, ': null');
+    const s = JSON.parse(cleaned);
+    const prev = state;
+    state = s;
+    render(prev);
+  } catch(e) {}
+}
+
+// ── API helpers ────────────────────────────────────────────────────────────
+const api = (path, method='GET', body=null) =>
+  fetch(path, {method, headers:{'Content-Type':'application/json'}, body: body ? JSON.stringify(body) : null})
+    .then(r => r.json()).catch(e => console.error(e));
+
+async function startSim() {
+  const speed = parseFloat(document.getElementById('speed-select').value);
+  await api('/api/simulation/start','POST',{speed});
+}
+async function pauseSim() { await api('/api/simulation/pause','POST'); }
+async function resumeSim() { await api('/api/simulation/resume','POST'); }
+async function resetSim() { await api('/api/simulation/reset','POST'); planVersions={}; }
+async function setSpeed(v) { await api('/api/simulation/speed','POST',{speed:parseFloat(v)}); }
+async function generatePlan() { await api('/api/plan/generate','POST'); showNotif('Plan generated!'); }
+async function startDemo() {
+  await api('/api/demo/start','POST');
+  showNotif('🎬 DEMO MODE STARTED — Watch the scenario unfold!');
+}
+async function applyEvent(type) {
+  await api('/api/events','POST',{event_type:type});
+}
+function sendAlert() { showNotif('📢 SIMULATION ALERT SENT (Demo only — no real emergency services contacted)'); }
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render(prev) {
+  if (!state) return;
+  renderHeader();
+  renderZones(prev);
+  renderAgents();
+  renderResources();
+  renderTimeline();
+  renderAlert();
+  updateMap();
+  syncPlans();
+}
+
+function renderHeader() {
+  const s = state;
+  document.getElementById('sim-time').textContent = s.sim_time || '09:00';
+  document.getElementById('rainfall-val').textContent = (s.rainfall_mm||0).toFixed(1);
+  const dot = document.getElementById('sim-dot');
+  const txt = document.getElementById('sim-status-text');
+  dot.className = 'status-dot ' + (s.status||'idle');
+  txt.textContent = (s.status||'idle').charAt(0).toUpperCase() + (s.status||'idle').slice(1);
+  // Header counters
+  const hdrZones = document.getElementById('hdr-zones');
+  const hdrPlan = document.getElementById('hdr-plan');
+  if (hdrZones) hdrZones.textContent = (s.zones||[]).length;
+  if (hdrPlan) {
+    const lv = s.plans && s.plans.length ? Math.max(...s.plans.map(p=>p.version)) : null;
+    hdrPlan.textContent = lv ? 'V' + lv : '--';
+  }
+}
+
+function renderZones(prev) {
+  const list = document.getElementById('zones-list');
+  const zones = state.zones || [];
+  const badge = document.getElementById('zone-count');
+  badge.textContent = zones.length + ' zone' + (zones.length!==1?'s':'');
+  badge.className = 'panel-count' + (zones.length > 0 ? ' critical' : '');
+
+  // Check for new zones to show notification
+  const prevIds = prev ? (prev.zones||[]).map(z=>z.zone_id) : [];
+  zones.filter(z=>!prevIds.includes(z.zone_id)).forEach(z => {
+    showNotif(`NEW AFFECTED ZONE: ${z.zone_name} — Priority: ${z.priority}`);
+  });
+
+  list.innerHTML = zones.sort((a,b)=>priorityOrder(a.priority)-priorityOrder(b.priority)).map(z => `
+    <div class="zone-card ${z.priority}${selectedZone===z.zone_id?' selected':''}${z.is_new?' new-zone':''}" onclick="selectZone('${z.zone_id}')">
+      <div class="zone-header">
+        <div class="zone-name">${z.zone_name}${z.is_new?'<span class="zone-new-tag">NEW</span>':''}</div>
+        <div class="zone-badge ${z.priority}">${z.priority}</div>
+      </div>
+      <div class="zone-stats">
+        <div class="zone-stat"><span class="zone-stat-label">Pop. at Risk</span><span class="zone-stat-value">${fmtNum(z.population_at_risk)}</span></div>
+        <div class="zone-stat"><span class="zone-stat-label">Critical Pts</span><span class="zone-stat-value crit">${z.critical_patients}</span></div>
+        <div class="zone-stat"><span class="zone-stat-label">Flood Level</span><span class="zone-stat-value">${z.flood_level}m</span></div>
+        <div class="zone-stat"><span class="zone-stat-label">Blocked Roads</span><span class="zone-stat-value">${z.blocked_roads}</span></div>
+      </div>
+      <div class="flood-bar"><div class="flood-fill" style="width:${Math.min(100,z.flood_level/4*100)}%;background:${priorityColor(z.priority)}"></div></div>
+    </div>`).join('');
+}
+
+function renderAgents() {
+  const agents = state.agents || {};
+  const list = document.getElementById('agents-list');
+  const order = ['Medical','Logistics','Routing','Rescue','Communication','Coordinator'];
+  const activeCount = order.filter(n => agents[n] && !['Idle','Ready'].includes(agents[n].status)).length;
+  const agentBadge = document.getElementById('agents-active-badge');
+  if (agentBadge) { agentBadge.textContent = activeCount + ' active'; agentBadge.className = 'panel-count' + (activeCount > 0 ? ' live' : ''); }
+
+  list.innerHTML = order.map(name => {
+    const a = agents[name] || {};
+    const st = a.status || 'Idle';
+    const isActive = !['Idle','Ready'].includes(st);
+    return `
+    <div class="agent-item${isActive?' active':''}">
+      <div class="agent-header">
+        <div class="agent-dot ${st}"></div>
+        <div class="agent-name">${name} Agent</div>
+        <div class="agent-status-badge ${st}">${st}</div>
+      </div>
+      <div class="agent-action">${escHtml(a.last_action||'Waiting for simulation start')}</div>
+    </div>`;
+  }).join('');
+
+  // Agent events log
+  const evts = state.agent_events || [];
+  const evtList = document.getElementById('agent-events-list');
+  if (rightTab === 'events') {
+    evtList.innerHTML = evts.slice(0,35).map(e => `
+      <div class="event-item">
+        <div class="event-agent">${e.agent}</div>
+        <div class="event-body">
+          <div class="event-type">${escHtml(e.event_type)}</div>
+          ${e.decision?`<div class="event-detail" style="color:var(--green)">${escHtml(e.decision)}</div>`:''}
+          ${e.request?`<div class="event-detail">Req: ${escHtml(e.request)}</div>`:''}
+          ${e.reason?`<div class="event-detail">${escHtml(e.reason)}</div>`:''}
+        </div>
+        <div class="event-time">${formatTime(e.timestamp)}</div>
+      </div>`).join('');
+  }
+
+  // Rationale
+  if (rightTab === 'rationale') {
+    const plans = state.plans || [];
+    const latest = plans[plans.length-1];
+    const rs = latest && latest.resource_snapshot || {};
+    document.getElementById('rationale-text').innerHTML = latest
+      ? `<div style="font-size:10px;color:var(--text2);line-height:1.7;margin-bottom:8px">${escHtml(latest.rationale)}</div>
+         <div style="font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:5px">Resource Snapshot</div>
+         <div style="font-size:9px;color:var(--text2);font-family:var(--mono);line-height:1.9">
+           Ambulances: <b>${rs.ambulances_deployed||'?'}/${rs.ambulances_total||'?'}</b> deployed<br/>
+           Helicopters: <b>${rs.helicopters_deployed||'?'}/${rs.helicopters_total||'?'}</b> deployed<br/>
+           Rescue: <b>${rs.rescue_vehicles_deployed||'?'}/${rs.rescue_vehicles_total||'?'}</b> deployed<br/>
+           Med Teams: <b>${rs.medical_teams_deployed||'?'}/${rs.medical_teams_total||'?'}</b> deployed
+         </div>`
+      : '<span style="color:var(--text3)">Generate a plan to see rationale.</span>';
+  }
+
+  // Decisions
+  if (rightTab === 'decisions') {
+    const plans = state.plans || [];
+    const latest = plans[plans.length-1];
+    const el = document.getElementById('decisions-list');
+    if (el) {
+      el.innerHTML = latest && latest.coordinator_decisions && latest.coordinator_decisions.length
+        ? `<div style="font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px">Plan V${latest.version} — ${latest.coordinator_decisions.length} Decisions</div>` +
+          latest.coordinator_decisions.map(d=>{
+            const bg = d.includes('HELICOPTER') ? 'rgba(6,182,212,.07)' : d.includes('SHORTFALL') ? 'var(--critical-bg)' : d.includes('COORDINATOR FINAL') ? 'rgba(34,197,94,.07)' : 'var(--bg4)';
+            const border = d.includes('SHORTFALL') ? 'var(--critical-border)' : 'var(--border)';
+            return `<div style="padding:5px 8px;border-radius:4px;border:1px solid ${border};background:${bg};margin-bottom:3px;font-size:9px;color:var(--text2);line-height:1.5">${escHtml(d)}</div>`;
+          }).join('')
+        : '<span style="color:var(--text3)">No decisions yet — generate a plan.</span>';
+    }
+  }
+}
+
+function renderResources() {
+  const r = state.resources || {};
+  const items = [
+    {key:'ambulances', label:'Ambulances', avail:r.ambulances_available, total:r.ambulances_total},
+    {key:'rescue', label:'Rescue Vehicles', avail:r.rescue_vehicles_available, total:r.rescue_vehicles_total},
+    {key:'helicopters', label:'Helicopters', avail:r.helicopters_available, total:r.helicopters_total},
+    {key:'police', label:'Police Units', avail:r.police_units_available, total:r.police_units_total},
+    {key:'medteams', label:'Medical Teams', avail:r.medical_teams_available, total:r.medical_teams_total},
+    {key:'evac', label:'Evac Vehicles', avail:r.evacuation_vehicles_available, total:r.evacuation_vehicles_total},
+  ];
+  const supplies = [
+    {key:'shelter', label:'Shelter Slots', avail:r.shelter_available, total:r.shelter_total},
+    {key:'food', label:'Food Packets', avail:r.food_available, total:r.food_total},
+    {key:'water', label:'Water (L)', avail:r.water_available, total:r.water_total},
+    {key:'meds', label:'Med Supplies', avail:r.medical_supplies_available, total:r.medical_supplies_total},
+  ];
+  const all = [...items, ...supplies];
+  document.getElementById('resource-grid').innerHTML = all.map(it => {
+    const pct = it.total ? Math.max(0, Math.min(100, (it.avail||0)/it.total*100)) : 100;
+    const cls = pct < 20 ? 'depleted' : pct < 50 ? 'warning' : '';
+    return `<div class="res-item${cls?' '+cls:''}">
+      <div class="res-name">${it.label}</div>
+      <div class="res-bar-row">
+        <div class="res-nums">${fmtNum(it.avail||0)}<span style="color:var(--text3);font-size:9px">/${fmtNum(it.total||0)}</span></div>
+        <div class="res-bar"><div class="res-fill ${cls}" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('resource-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+
+function renderTimeline() {
+  const inc = state.incidents || [];
+  document.getElementById('timeline-list').innerHTML = inc.slice(0,40).map(i => {
+    const cls = i.severity === 'Critical' ? 'critical' : i.event_type === 'Demo' ? 'demo' : 'system';
+    return `<div class="timeline-item ${cls}">
+      <div class="timeline-time">${i.sim_time||''}</div>
+      <div class="timeline-text">${escHtml(i.description)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAlert() {
+  const sev = state.alert_severity;
+  const txt = state.public_alert;
+  const badge = document.getElementById('alert-severity-badge');
+  const content = document.getElementById('alert-text-content');
+  if (sev) {
+    badge.innerHTML = `<div class="alert-severity ${sev}">${sev} ALERT</div>`;
+    content.className = 'alert-text';
+    content.textContent = txt || '';
+  }
+}
+
+function syncPlans() {
+  const plans = state.plans || [];
+  if (!plans.length) return;
+
+  // Store all plan versions
+  plans.forEach(p => { planVersions[p.version] = p; });
+  const tabBar = document.getElementById('plan-tab-bar');
+  const latestV = Math.max(...plans.map(p=>p.version));
+  if (!currentPlanTab) currentPlanTab = latestV;
+  // Detect new plan
+  if (currentPlanTab < latestV) {
+    currentPlanTab = latestV;
+    showNotif(`📋 Plan V${latestV} generated!`);
+  }
+
+  tabBar.innerHTML = plans.map(p => `
+    <div class="plan-tab ${currentPlanTab===p.version?'active':''}"
+         onclick="switchPlanTab(${p.version},this)">V${p.version}</div>`).join('');
+  document.getElementById('plan-version-badge').textContent =
+    plans.length > 1 ? `${plans.length} plans` : `V${latestV}`;
+
+  renderPlanContent();
+
+  // What changed
+  const latest = plans[plans.length-1];
+  const changes = document.getElementById('changes-list');
+  if (latest && latest.what_changed && latest.what_changed.length) {
+    changes.innerHTML = `
+      <div style="font-size:10px;font-weight:700;color:var(--yellow);padding:6px 8px;border-bottom:1px solid var(--border)">
+        PLAN V${latest.version-1} → V${latest.version} — ${latest.what_changed.length} changes
+      </div>` +
+      latest.what_changed.map(c=>`<div class="change-item">${escHtml(c)}</div>`).join('');
+  } else if (plans.length === 1) {
+    changes.innerHTML = `<div style="padding:12px;font-size:10px;color:var(--text3)">
+      Add Perungudi zone and generate a new plan to see what changed (V1→V2).
+    </div>`;
+  }
+}
+
+function renderPlanContent() {
+  const plan = planVersions[currentPlanTab];
+  if (!plan) return;
+  const allocs = plan.allocations || [];
+  document.getElementById('plan-content').innerHTML = `
+    <div style="font-size:9px;color:var(--text3);padding:0 4px 4px;font-style:italic">
+      Plan V${plan.version} generated ${plan.generated_at} — ${plan.zones.length} zones, ${plan.unresolved_conflicts.length} unresolved conflicts
+    </div>
+    <table class="alloc-table">
+      <thead><tr>
+        <th>Zone</th><th>Priority</th><th>🚑</th><th>🚒</th><th>🚁</th><th>👮</th><th>🏥</th>
+      </tr></thead>
+      <tbody>
+        ${allocs.map(a=>`<tr>
+          <td>${a.zone_name}</td>
+          <td><span class="zone-badge ${a.zone_id ? (plan.zones.find(z=>z.zone_id===a.zone_id)||{}).priority||'' : ''}"
+            style="font-size:8px">${(plan.zones.find(z=>z.zone_id===a.zone_id)||{}).priority||'—'}</span></td>
+          <td style="color:var(--critical)">${a.ambulances}</td>
+          <td style="color:var(--orange)">${a.rescue_vehicles}</td>
+          <td style="color:var(--accent)">${a.helicopters}</td>
+          <td>${a.police_units}</td>
+          <td>${a.medical_teams}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    ${plan.unresolved_conflicts.length ? `
+    <div style="margin-top:6px;padding:5px 8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:4px;font-size:9px;color:var(--red)">
+      ⚠️ ${plan.unresolved_conflicts.join(' | ')}
+    </div>` : ''}`;
+}
+
+// ── Map ────────────────────────────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', {
+    center: [13.08, 80.27],
+    zoom: 11,
+    zoomControl: true,
+    attributionControl: false,
+  });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  L.control.attribution({position:'bottomright',prefix:''})
+    .addAttribution('Simulation only — not official data').addTo(map);
+}
+
+const PRIORITY_COLORS = {CRITICAL:'#ef4444',HIGH:'#f97316',MEDIUM:'#eab308',LOW:'#22c55e'};
+function priorityColor(p) { return PRIORITY_COLORS[p] || '#3b82f6'; }
+function priorityOrder(p) { return {CRITICAL:0,HIGH:1,MEDIUM:2,LOW:3}[p]||9; }
+
+function updateMap() {
+  if (!map || !state) return;
+  const zones = state.zones || [];
+  const roads = state.roads || [];
+  const routes = state.evacuation_routes || [];
+  const hospitals = state.hospitals || [];
+
+  // Remove old zone circles
+  Object.values(mapLayers.circles).forEach(l => map.removeLayer(l));
+  mapLayers.circles = {};
+  mapLayers.roads.forEach(l => map.removeLayer(l));
+  mapLayers.roads = [];
+  mapLayers.routes.forEach(l => map.removeLayer(l));
+  mapLayers.routes = [];
+  mapLayers.hospitals.forEach(l => map.removeLayer(l));
+  mapLayers.hospitals = [];
+
+  // Draw zones
+  zones.forEach(z => {
+    const color = priorityColor(z.priority);
+    const radius = 3000 + z.population_at_risk * 0.05;
+    const circle = L.circle([z.latitude, z.longitude], {
+      radius: Math.min(radius, 7000),
+      color: color,
+      fillColor: color,
+      fillOpacity: z.is_new ? 0.25 : 0.15,
+      weight: z.is_new ? 3 : 2,
+      dashArray: z.is_new ? '8,4' : null,
+    }).addTo(map).bindPopup(`
+      <div style="font-family:Inter,sans-serif;min-width:180px">
+        <b style="color:${color}">${z.zone_name}</b> <span style="font-size:10px;padding:1px 5px;border-radius:2px;background:rgba(0,0,0,.3)">${z.priority}</span>
+        ${z.is_new?'<span style="color:#ef4444;font-size:10px"> 🆕 NEW</span>':''}
+        <hr style="border:none;border-top:1px solid #333;margin:5px 0"/>
+        <div style="font-size:11px;line-height:1.8">
+          Pop. at Risk: <b>${z.population_at_risk.toLocaleString()}</b><br/>
+          Critical Patients: <b style="color:#ef4444">${z.critical_patients}</b><br/>
+          Flood Level: <b>${z.flood_level}m</b><br/>
+          Blocked Roads: <b>${z.blocked_roads}</b><br/>
+          Severity: <b>${z.flood_severity}</b>
+        </div>
+      </div>`);
+    mapLayers.circles[z.zone_id] = circle;
+
+    // Label
+    const label = L.divIcon({
+      html:`<div style="color:${color};font-family:Inter,sans-serif;font-size:10px;font-weight:700;text-shadow:0 0 4px #000,0 0 8px #000;white-space:nowrap">${z.zone_name}</div>`,
+      iconSize:[120,20], iconAnchor:[60,10], className:''
+    });
+    mapLayers.circles[z.zone_id+'_label'] = L.marker([z.latitude, z.longitude], {icon:label}).addTo(map);
+  });
+
+  // Draw blocked roads (sample — only Blocked/Flooded)
+  const blockedRoads = roads.filter(r => r.road_status !== 'Open').slice(0, 30);
+  blockedRoads.forEach(r => {
+    const color = r.road_status === 'Flooded' ? '#f97316' : '#ef4444';
+    const line = L.polyline([[r.from_lat, r.from_lon],[r.to_lat, r.to_lon]], {
+      color, weight: 3, opacity: 0.8, dashArray: '6,4'
+    }).addTo(map);
+    mapLayers.roads.push(line);
+  });
+
+  // Draw evacuation routes
+  const routeColors = {'Open':'#22c55e','Blocked':'#ef4444','Blocked — OMR flooded':'#ef4444'};
+  routes.forEach(r => {
+    const fromZone = zones.find(z=>z.zone_id===r.from_zone);
+    const toZone = zones.find(z=>z.zone_id===r.to_zone);
+    if (!fromZone || !toZone) return;
+    const isOpen = r.status === 'Open';
+    const line = L.polyline([
+      [fromZone.latitude, fromZone.longitude],
+      [toZone.latitude, toZone.longitude]
+    ], {
+      color: isOpen ? '#22c55e' : '#ef4444',
+      weight: isOpen ? 2 : 1.5,
+      opacity: isOpen ? 0.7 : 0.4,
+      dashArray: isOpen ? null : '4,4'
+    }).addTo(map).bindTooltip(r.description, {className:'leaflet-tooltip-dark'});
+    mapLayers.routes.push(line);
+  });
+
+  // Draw hospitals
+  hospitals.forEach(h => {
+    const icon = L.divIcon({
+      html:`<div style="background:#3b82f6;border:2px solid #60a5fa;border-radius:50%;width:10px;height:10px;box-shadow:0 0 6px #3b82f6"></div>`,
+      iconSize:[10,10],iconAnchor:[5,5],className:''
+    });
+    const m = L.marker([h.latitude, h.longitude], {icon})
+      .addTo(map)
+      .bindPopup(`<b>${h.hospital_name}</b><br/>Beds: ${h.beds} | ICU: ${h.icu_beds}`);
+    mapLayers.hospitals.push(m);
+  });
+}
+
+// ── Zone modal ─────────────────────────────────────────────────────────────
+function selectZone(zoneId) {
+  selectedZone = zoneId;
+  const zone = (state.zones||[]).find(z=>z.zone_id===zoneId);
+  if (!zone) return;
+  const alloc = (state.allocations||[]).find(a=>a.zone_id===zoneId) || {};
+
+  document.getElementById('modal-zone-name').innerHTML =
+    `${zone.zone_name} — <span class="zone-badge ${zone.priority}">${zone.priority}</span> <span class="modal-close" onclick="closeModal()">✕</span>`;
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">Situation</div>
+      <div class="detail-grid">
+        ${detail('Population',fmtNum(zone.population))}
+        ${detail('At Risk',fmtNum(zone.population_at_risk))}
+        ${detail('Critical Patients',zone.critical_patients,'var(--critical)')}
+        ${detail('Injured',zone.injured_people,'var(--orange)')}
+        ${detail('Vulnerable',zone.vulnerable_population)}
+        ${detail('Flood Level',zone.flood_level+'m')}
+        ${detail('Severity',zone.flood_severity)}
+        ${detail('Blocked Roads',zone.blocked_roads)}
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Requirements vs Allocation</div>
+      <div class="detail-grid">
+        ${detailCmp('Ambulances',zone.ambulance_requirement, alloc.ambulances)}
+        ${detailCmp('Rescue Vehicles',zone.rescue_vehicle_requirement, alloc.rescue_vehicles)}
+        ${detailCmp('Medical Teams',zone.medical_team_requirement, alloc.medical_teams)}
+        ${detailCmp('Helicopters','—', alloc.helicopters)}
+        ${detailCmp('Shelter Demand',fmtNum(zone.shelter_demand), alloc.shelter_slots)}
+        ${detailCmp('Food (packets)',fmtNum(zone.food_requirement), alloc.food_packets)}
+        ${detailCmp('Water (L)',fmtNum(zone.water_requirement), alloc.water_litres)}
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Priority Reason</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.5">${escHtml(zone.priority_reason||'—')}</div>
+    </div>`;
+
+  document.getElementById('zone-modal').classList.add('open');
+  renderZones(null); // update selection highlight
+}
+
+function detail(label, value, color='') {
+  return `<div class="detail-item">
+    <div class="detail-label">${label}</div>
+    <div class="detail-value" ${color?`style="color:${color}"`:''}>${value}</div>
+  </div>`;
+}
+function detailCmp(label, req, alloc) {
+  const ok = alloc !== undefined && alloc !== null;
+  const color = ok && alloc < req ? 'var(--yellow)' : ok && alloc >= req ? 'var(--green)' : '';
+  return `<div class="detail-item">
+    <div class="detail-label">${label}</div>
+    <div class="detail-value" ${color?`style="color:${color}"`:''}>${req} → <b>${ok?alloc:'—'}</b></div>
+  </div>`;
+}
+function closeModal() { document.getElementById('zone-modal').classList.remove('open'); }
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchRightTab(tab, el) {
+  rightTab = tab;
+  ['rtab-events','rtab-rationale','rtab-decisions'].forEach(id => {
+    const t = document.getElementById(id); if (t) t.classList.remove('active');
+  });
+  if (el) el.classList.add('active');
+  document.getElementById('right-events').classList.toggle('active', tab==='events');
+  document.getElementById('right-rationale').classList.toggle('active', tab==='rationale');
+  document.getElementById('right-decisions').classList.toggle('active', tab==='decisions');
+  renderAgents();
+}
+
+function switchPlanTab(v, el) {
+  currentPlanTab = v;
+  document.querySelectorAll('.plan-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderPlanContent();
+}
+
+function switchBottomTab(tab, el) {
+  bottomTab = tab;
+  document.querySelectorAll('.tab-bar .tab').forEach(t => {
+    if (!t.closest('.panel.right') && !t.closest('.plan-tab-bar')) t.classList.remove('active');
+  });
+  el.classList.add('active');
+  document.getElementById('bottom-alert').classList.toggle('active', tab==='alert');
+  document.getElementById('bottom-changes').classList.toggle('active', tab==='changes');
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────
+function showNotif(msg, type='alert') {
+  const n = document.getElementById('notification');
+  n.textContent = msg;
+  n.className = type === 'info' ? 'info' : type === 'success' ? 'success' : '';
+  n.style.display = 'block';
+  clearTimeout(n._t);
+  n._t = setTimeout(()=>{ n.style.display='none'; }, 4500);
+}
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+function fmtNum(n) { return (n||0).toLocaleString(); }
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function formatTime(iso) {
+  if (!iso) return '';
+  try { return new Date(iso).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+  catch { return iso; }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  connect();
+  // Poll state every 1.5s as robust fallback
+  setInterval(fetchState, 1500);
+});
+</script>
+</body>
+</html>

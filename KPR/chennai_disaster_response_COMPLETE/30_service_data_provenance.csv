@@ -1,0 +1,3 @@
+files,provenance_note
+16-19,"Police/fire/hospital names are based on official Chennai public directories; capacities, staffing, availability and coordinates are scenario fields."
+20-29,Operational service/facility records are synthetic scenario layers calibrated to realistic Chennai-scale ranges; they are not live availability feeds.
